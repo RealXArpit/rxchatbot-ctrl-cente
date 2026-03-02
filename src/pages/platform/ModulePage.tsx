@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/platform/PageHeader";
 import { EmptyStatePanel } from "@/components/platform/EmptyStatePanel";
 import { RequireRole } from "@/components/platform/RequireRole";
 import { routeMetadata } from "@/lib/mock-api";
+import OverviewPage from "./OverviewPage";
 
 const moduleMeta: Record<string, { title: string; subtitle: string }> = {
   overview: { title: "Overview", subtitle: "High-level metrics and system health at a glance." },
@@ -23,6 +24,11 @@ export default function ModulePage() {
 
   if (!meta) {
     return <Navigate to={`/realx/${env}/not-found`} replace />;
+  }
+
+  // Dedicated page for overview
+  if (module === "overview") {
+    return <OverviewPage />;
   }
 
   const allowedRoles = routeMetadata[module!]?.allowedRoles ?? [];
