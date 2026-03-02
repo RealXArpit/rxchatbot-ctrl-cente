@@ -4,6 +4,7 @@ import { EmptyStatePanel } from "@/components/platform/EmptyStatePanel";
 import { RequireRole } from "@/components/platform/RequireRole";
 import { routeMetadata } from "@/lib/mock-api";
 import OverviewPage from "./OverviewPage";
+import ChatLogsPage from "./ChatLogsPage";
 
 const moduleMeta: Record<string, { title: string; subtitle: string }> = {
   overview: { title: "Overview", subtitle: "High-level metrics and system health at a glance." },
@@ -26,10 +27,8 @@ export default function ModulePage() {
     return <Navigate to={`/realx/${env}/not-found`} replace />;
   }
 
-  // Dedicated page for overview
-  if (module === "overview") {
-    return <OverviewPage />;
-  }
+  if (module === "overview") return <OverviewPage />;
+  if (module === "chat-logs") return <ChatLogsPage />;
 
   const allowedRoles = routeMetadata[module!]?.allowedRoles ?? [];
 
