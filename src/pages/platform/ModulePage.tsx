@@ -1,6 +1,8 @@
 import { useParams, Navigate } from "react-router-dom";
 import { PageHeader } from "@/components/platform/PageHeader";
 import { EmptyStatePanel } from "@/components/platform/EmptyStatePanel";
+import { RequireRole } from "@/components/platform/RequireRole";
+import { routeMetadata } from "@/lib/mock-api";
 
 const moduleMeta: Record<string, { title: string; subtitle: string }> = {
   overview: { title: "Overview", subtitle: "High-level metrics and system health at a glance." },
@@ -23,10 +25,14 @@ export default function ModulePage() {
     return <Navigate to={`/realx/${env}/not-found`} replace />;
   }
 
+  const allowedRoles = routeMetadata[module!]?.allowedRoles ?? [];
+
   return (
-    <div>
-      <PageHeader title={meta.title} subtitle={meta.subtitle} />
-      <EmptyStatePanel />
-    </div>
+    <RequireRole allowedRoles={allowedRoles}>
+      <div>
+        <PageHeader title={meta.title} subtitle={meta.subtitle} />
+        <EmptyStatePanel />
+      </div>
+    </RequireRole>
   );
 }

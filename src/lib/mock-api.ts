@@ -76,12 +76,12 @@ export function getTenantContext(tenantId: string, env: string): TenantContext |
 export const routeMetadata: Record<string, { allowedRoles: Role[] }> = {
   overview: { allowedRoles: ["SuperAdmin", "OpsManager", "KnowledgeManager", "SupportAgent", "Auditor"] },
   train: { allowedRoles: ["SuperAdmin", "OpsManager", "KnowledgeManager"] },
-  monitoring: { allowedRoles: ["SuperAdmin", "OpsManager", "SupportAgent"] },
-  "chat-logs": { allowedRoles: ["SuperAdmin", "OpsManager", "SupportAgent"] },
+  monitoring: { allowedRoles: ["SuperAdmin", "OpsManager", "Auditor"] },
+  "chat-logs": { allowedRoles: ["SuperAdmin", "OpsManager", "KnowledgeManager", "SupportAgent", "Auditor"] },
   escalations: { allowedRoles: ["SuperAdmin", "OpsManager", "SupportAgent"] },
   feedback: { allowedRoles: ["SuperAdmin", "OpsManager", "KnowledgeManager", "SupportAgent"] },
   configuration: { allowedRoles: ["SuperAdmin", "OpsManager"] },
   integrations: { allowedRoles: ["SuperAdmin", "OpsManager"] },
   users: { allowedRoles: ["SuperAdmin"] },
-  audit: { allowedRoles: ["SuperAdmin", "Auditor"] },
+  audit: { allowedRoles: ["SuperAdmin", "OpsManager", "Auditor"] },
 };
