@@ -8,6 +8,7 @@ import { RequireAuth } from "@/components/platform/RequireAuth";
 import { AppShell } from "@/components/platform/AppShell";
 import ModulePage from "@/pages/platform/ModulePage";
 import ConversationDetailPage from "@/pages/platform/ConversationDetailPage";
+import EscalationDetailPage from "@/pages/platform/EscalationDetailPage";
 import PlatformNotFound from "@/pages/platform/PlatformNotFound";
 import PlatformForbidden from "@/pages/platform/ForbiddenPage";
 import LoginPage from "@/pages/LoginPage";
@@ -41,6 +42,7 @@ const App = () => (
               }
             >
               <Route path="chat-logs/:conversationId" element={<ConversationDetailPage />} />
+              <Route path="escalations/:ticketId" element={<EscalationDetailPage />} />
               <Route path=":module" element={<ModulePage />} />
               <Route path="forbidden" element={<PlatformForbidden />} />
               <Route path="not-found" element={<PlatformNotFound />} />
