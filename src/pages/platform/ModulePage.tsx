@@ -5,6 +5,7 @@ import { RequireRole } from "@/components/platform/RequireRole";
 import { routeMetadata } from "@/lib/mock-api";
 import OverviewPage from "./OverviewPage";
 import ChatLogsPage from "./ChatLogsPage";
+import EscalationsPage from "./EscalationsPage";
 
 const moduleMeta: Record<string, { title: string; subtitle: string }> = {
   overview: { title: "Overview", subtitle: "High-level metrics and system health at a glance." },
@@ -29,6 +30,7 @@ export default function ModulePage() {
 
   if (module === "overview") return <OverviewPage />;
   if (module === "chat-logs") return <ChatLogsPage />;
+  if (module === "escalations") return <EscalationsPage />;
 
   const allowedRoles = routeMetadata[module!]?.allowedRoles ?? [];
 

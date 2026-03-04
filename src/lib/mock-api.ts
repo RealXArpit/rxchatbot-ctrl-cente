@@ -78,7 +78,7 @@ export const routeMetadata: Record<string, { allowedRoles: Role[] }> = {
   train: { allowedRoles: ["SuperAdmin", "OpsManager", "KnowledgeManager"] },
   monitoring: { allowedRoles: ["SuperAdmin", "OpsManager", "Auditor"] },
   "chat-logs": { allowedRoles: ["SuperAdmin", "OpsManager", "KnowledgeManager", "SupportAgent", "Auditor"] },
-  escalations: { allowedRoles: ["SuperAdmin", "OpsManager", "SupportAgent"] },
+  escalations: { allowedRoles: ["SuperAdmin", "OpsManager", "SupportAgent", "KnowledgeManager", "Auditor"] },
   feedback: { allowedRoles: ["SuperAdmin", "OpsManager", "KnowledgeManager", "SupportAgent"] },
   configuration: { allowedRoles: ["SuperAdmin", "OpsManager"] },
   integrations: { allowedRoles: ["SuperAdmin", "OpsManager"] },
