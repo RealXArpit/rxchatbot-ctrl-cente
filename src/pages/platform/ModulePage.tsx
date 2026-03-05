@@ -8,6 +8,7 @@ import ChatLogsPage from "./ChatLogsPage";
 import EscalationsPage from "./EscalationsPage";
 import TrainPage from "./TrainPage";
 import MonitoringPage from "./MonitoringPage";
+import ConfigurationPage from "./ConfigurationPage";
 
 const moduleMeta: Record<string, { title: string; subtitle: string }> = {
   overview: { title: "Overview", subtitle: "High-level metrics and system health at a glance." },
@@ -35,6 +36,7 @@ export default function ModulePage() {
   if (module === "escalations") return <EscalationsPage />;
   if (module === "train") return <TrainPage />;
   if (module === "monitoring") return <MonitoringPage />;
+  if (module === "configuration") return <ConfigurationPage />;
 
   const allowedRoles = routeMetadata[module!]?.allowedRoles ?? [];
 
