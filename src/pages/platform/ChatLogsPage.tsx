@@ -9,6 +9,7 @@ import { LogsTable } from "@/components/chat-logs/LogsTable";
 import { ColumnPicker, loadColumns } from "@/components/chat-logs/ColumnPicker";
 import { SavedViews } from "@/components/chat-logs/SavedViews";
 import { ExportButton } from "@/components/chat-logs/ExportButton";
+import { LiveDataBanner } from "@/components/chat-logs/LiveDataBanner";
 
 export default function ChatLogsPage() {
   const { env } = useTenant();
@@ -42,6 +43,7 @@ export default function ChatLogsPage() {
           }
         />
 
+        <LiveDataBanner />
         <LogsFiltersBar filters={filters} onChange={handleFilterChange} />
 
         <LogsTable

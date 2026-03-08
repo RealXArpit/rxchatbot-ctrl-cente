@@ -15,6 +15,15 @@ export interface Conversation {
   citations: string[];
   escalationReason: string | null;
   legalHold: boolean;
+  // n8n-aligned fields
+  logId: string;
+  tokensUsed: number;
+  correlationId: string;
+  escalationPriority: "P0" | "P1" | "P2" | null;
+  sentiment: "positive" | "neutral" | "negative";
+  intent: "FAQ" | "ESCALATE" | "UNCLEAR" | "ERROR";
+  feedback: 1 | -1 | null;
+  adminReferenceAnswer: string | null;
 }
 
 export interface Message {
@@ -25,6 +34,8 @@ export interface Message {
   textRedacted: string;
   createdAt: string;
   piiRedacted: boolean;
+  feedback?: 1 | -1 | null;
+  adminReferenceAnswer?: string | null;
 }
 
 export interface CacheEntry {
@@ -88,6 +99,10 @@ const botAnswers = [
   "FRAX tokens represent fractional property ownership, while equity represents company shares.",
 ];
 
+const intents: Conversation["intent"][] = ["FAQ", "FAQ", "FAQ", "ESCALATE", "UNCLEAR", "FAQ", "FAQ", "ERROR", "FAQ", "ESCALATE"];
+const sentiments: Conversation["sentiment"][] = ["positive", "neutral", "neutral", "negative", "neutral", "positive", "neutral", "negative", "positive", "neutral"];
+const priorities: Conversation["escalationPriority"][] = [null, null, null, "P1", "P2", null, null, null, null, "P0"];
+
 function randomDate(start: Date, end: Date): Date {
   return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
 }
@@ -100,12 +115,16 @@ function generateConversations(env: string): Conversation[] {
 
   for (let i = 0; i < count; i++) {
     const started = randomDate(startRange, endRange);
-    const duration = 30000 + Math.random() * 300000; // 30s to 5min
-    const conf = i < 5 ? 0.3 + Math.random() * 0.2 : // first 5 = low confidence
-                 i < 15 ? 0.55 + Math.random() * 0.17 : // next 10 = medium
-                 0.72 + Math.random() * 0.28; // rest = high
+    const duration = 30000 + Math.random() * 300000;
+    const conf = i < 5 ? 0.3 + Math.random() * 0.2 :
+                 i < 15 ? 0.55 + Math.random() * 0.17 :
+                 0.72 + Math.random() * 0.28;
     const isBot = conf > 0.55 && Math.random() > 0.2;
     const isLegal = i === 7 || i === 19;
+    const idx = i % 10;
+    const intent = intents[idx];
+    const hasFeedback = Math.random() > 0.6;
+    const hasAdminRef = intent === "ESCALATE" && Math.random() > 0.5;
 
     convs.push({
       id: `c_${1001 + i}`,
@@ -122,10 +141,17 @@ function generateConversations(env: string): Conversation[] {
       citations: isBot ? [`KB#${Math.ceil(Math.random() * 10)}`] : [],
       escalationReason: !isBot ? "Low confidence or user request" : null,
       legalHold: isLegal,
+      logId: crypto.randomUUID(),
+      tokensUsed: 120 + Math.floor(Math.random() * 400),
+      correlationId: `corr_${env}_${(5000 + i).toString(36)}`,
+      escalationPriority: !isBot ? priorities[idx] : null,
+      sentiment: sentiments[idx],
+      intent,
+      feedback: hasFeedback ? (Math.random() > 0.3 ? 1 : -1) : null,
+      adminReferenceAnswer: hasAdminRef ? botAnswers[i % botAnswers.length] : null,
     });
   }
 
-  // Sort by startedAt descending
   convs.sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime());
   return convs;
 }
@@ -166,6 +192,8 @@ function generateMessages(conv: Conversation, index: number): Message[] {
     textRedacted: botA,
     createdAt: new Date(base.getTime() + 10000).toISOString(),
     piiRedacted: false,
+    feedback: conv.feedback,
+    adminReferenceAnswer: conv.adminReferenceAnswer,
   });
 
   if (conv.routedTo === "HUMAN") {
@@ -237,7 +265,8 @@ export function getConversations(
       (c) =>
         c.id.toLowerCase().includes(q) ||
         c.sessionId.toLowerCase().includes(q) ||
-        c.userIdHash.toLowerCase().includes(q)
+        c.userIdHash.toLowerCase().includes(q) ||
+        c.logId.toLowerCase().includes(q)
     );
   }
   if (filters.channel) {
@@ -298,7 +327,11 @@ export type ColumnKey =
   | "cacheHit"
   | "citations"
   | "legalHold"
-  | "escalationReason";
+  | "escalationReason"
+  | "logId"
+  | "intent"
+  | "sentiment"
+  | "tokensUsed";
 
 export const ALL_COLUMNS: { key: ColumnKey; label: string; defaultVisible: boolean }[] = [
   { key: "id", label: "Conversation ID", defaultVisible: true },
@@ -307,7 +340,11 @@ export const ALL_COLUMNS: { key: ColumnKey; label: string; defaultVisible: boole
   { key: "routedTo", label: "Routed To", defaultVisible: true },
   { key: "confidence", label: "Confidence", defaultVisible: true },
   { key: "cacheHit", label: "Cache Hit", defaultVisible: true },
+  { key: "intent", label: "Intent", defaultVisible: true },
   { key: "citations", label: "Citations", defaultVisible: false },
   { key: "legalHold", label: "Legal Hold", defaultVisible: false },
   { key: "escalationReason", label: "Escalation Reason", defaultVisible: false },
+  { key: "logId", label: "Log ID", defaultVisible: false },
+  { key: "sentiment", label: "Sentiment", defaultVisible: false },
+  { key: "tokensUsed", label: "Tokens", defaultVisible: false },
 ];

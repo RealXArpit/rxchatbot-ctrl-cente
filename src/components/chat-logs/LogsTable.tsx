@@ -20,6 +20,19 @@ function confidenceBandLabel(c: number): { label: string; variant: "success" | "
   return { label: "Low", variant: "danger" };
 }
 
+const intentVariant: Record<string, "primary" | "warning" | "muted" | "danger"> = {
+  FAQ: "primary",
+  ESCALATE: "warning",
+  UNCLEAR: "muted",
+  ERROR: "danger",
+};
+
+const sentimentVariant: Record<string, "success" | "muted" | "danger"> = {
+  positive: "success",
+  neutral: "muted",
+  negative: "danger",
+};
+
 interface LogsTableProps {
   items: Conversation[];
   columns: ColumnKey[];
@@ -39,6 +52,10 @@ const columnHeaders: Record<ColumnKey, string> = {
   citations: "Citations",
   legalHold: "Legal Hold",
   escalationReason: "Escalation Reason",
+  logId: "Log ID",
+  intent: "Intent",
+  sentiment: "Sentiment",
+  tokensUsed: "Tokens",
 };
 
 export function LogsTable({ items, columns, page, pageSize, total, onPageChange }: LogsTableProps) {
@@ -84,6 +101,18 @@ export function LogsTable({ items, columns, page, pageSize, total, onPageChange 
             variant={conv.cacheHit ? "success" : "muted"}
           />
         );
+      case "intent":
+        return <StatusPill label={conv.intent} variant={intentVariant[conv.intent] ?? "muted"} />;
+      case "sentiment":
+        return <StatusPill label={conv.sentiment} variant={sentimentVariant[conv.sentiment] ?? "muted"} />;
+      case "logId":
+        return (
+          <span className="font-mono text-[10px] text-muted-foreground truncate max-w-[120px] block">
+            {conv.logId.slice(0, 12)}…
+          </span>
+        );
+      case "tokensUsed":
+        return <span className="tabular-nums text-xs text-muted-foreground">{conv.tokensUsed}</span>;
       case "citations":
         return (
           <div className="flex gap-1 flex-wrap">
@@ -151,32 +180,17 @@ export function LogsTable({ items, columns, page, pageSize, total, onPageChange 
         </Table>
       </div>
 
-      {/* Pagination */}
       {total > 0 && (
         <div className="flex items-center justify-between mt-3">
           <span className="text-xs text-muted-foreground tabular-nums">
             {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total}
           </span>
           <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
-              disabled={page <= 1}
-              onClick={() => onPageChange(page - 1)}
-            >
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <span className="text-xs tabular-nums text-muted-foreground px-1">
-              {page} / {totalPages}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
-              disabled={page >= totalPages}
-              onClick={() => onPageChange(page + 1)}
-            >
+            <span className="text-xs tabular-nums text-muted-foreground px-1">{page} / {totalPages}</span>
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" disabled={page >= totalPages} onClick={() => onPageChange(page + 1)}>
               <ChevronRight className="h-3.5 w-3.5" />
             </Button>
           </div>
