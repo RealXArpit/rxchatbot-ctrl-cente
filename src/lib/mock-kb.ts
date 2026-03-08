@@ -1,4 +1,4 @@
-import { auditLog } from "./mock-auth";
+// KB mock data
 
 export type KbStatus = "Draft" | "Proposed" | "Approved" | "Published" | "Archived";
 

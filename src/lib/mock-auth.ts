@@ -1,6 +1,6 @@
 // Mock auth API layer
 
-import type { Role } from "./mock-api";
+import type { Role-api";
 
 export interface MockUser {
   id: string;
@@ -35,9 +35,7 @@ const mockUsers: MockUser[] = [
 ];
 
 // In-memory audit log
-export const auditLog: AuditLogEvent[] = [];
-
-let currentSession: AuthSession | null = null;
+export const au// Audit log now lives in mock-audit.tsssion: AuthSession | null = null;
 
 function addAuditEvent(action: string, actorId: string) {
   // Legacy auth audit - no longer pushes to typed auditLog
