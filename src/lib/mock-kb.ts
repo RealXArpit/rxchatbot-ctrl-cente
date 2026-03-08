@@ -1,4 +1,4 @@
-import { auditLog } from "./mock-auth";
+// KB mock data
 
 export type KbStatus = "Draft" | "Proposed" | "Approved" | "Published" | "Archived";
 
@@ -92,12 +92,9 @@ const seedItems: KnowledgeBaseItem[] = [
 
 let items = structuredClone(seedItems);
 
-function addAudit(action: string, actorId: string, env: string) {
-  auditLog.push({
-    id: `evt_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-    tenantId: "realx", env, action, actorId,
-    createdAt: new Date().toISOString(),
-  });
+function addAudit(_action: string, _actorId: string, _env: string) {
+  // Legacy KB audit - no longer pushes to typed auditLog
+  // Real audit events go through mock-audit.ts appendAuditEvent
 }
 
 // --- API ---

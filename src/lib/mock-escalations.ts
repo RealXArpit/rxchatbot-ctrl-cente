@@ -1,4 +1,4 @@
-import type { AuditLogEvent } from "./mock-api";
+// Escalation mock data
 
 export type Priority = "P0" | "P1" | "P2";
 export type TicketStatus = "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
