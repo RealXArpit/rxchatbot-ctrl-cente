@@ -9,18 +9,23 @@ import { getKbById, createKbItem, updateKbItem, type KnowledgeBaseItem } from "@
 import { KbEditor } from "@/components/knowledge/KbEditor";
 import { KbApprovalPanel } from "@/components/knowledge/KbApprovalPanel";
 import { VersionTimeline } from "@/components/knowledge/VersionTimeline";
+import { AdminTrainingPanel } from "@/components/knowledge/AdminTrainingPanel";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
+import type { Role } from "@/lib/mock-api";
+
+const ADMIN_PANEL_ROLES: Role[] = ["KnowledgeManager", "OpsManager", "SuperAdmin"];
 
 export default function KbDetailPage() {
   const { kbId, env } = useParams<{ kbId: string; env: string }>();
   const navigate = useNavigate();
   const { session } = useAuth();
-  const role = session?.user.role;
+  const role = session?.user.role as Role;
   const isNew = kbId === "new";
   const isAuditor = role === "Auditor";
   const isSupportAgent = role === "SupportAgent";
   const canEdit = role === "KnowledgeManager" || role === "OpsManager" || role === "SuperAdmin";
+  const showAdminPanel = !isNew && ADMIN_PANEL_ROLES.includes(role);
 
   const [item, setItem] = useState<KnowledgeBaseItem | null>(() => isNew ? null : getKbById(kbId ?? ""));
   const [editing, setEditing] = useState(isNew);
@@ -51,6 +56,13 @@ export default function KbDetailPage() {
       toast.success("KB item updated");
       refresh();
       setEditing(false);
+    }
+  };
+
+  const handleSyncUpdate = (updates: Partial<KnowledgeBaseItem>) => {
+    if (item) {
+      Object.assign(item, updates);
+      setItem({ ...item });
     }
   };
 
@@ -91,6 +103,8 @@ export default function KbDetailPage() {
                   initial={formData}
                   onSave={handleSave}
                   onCancel={() => isNew ? navigate(`/realx/${env}/train`) : setEditing(false)}
+                  kbId={item?.id}
+                  isNew={isNew}
                 />
               ) : (
                 <KbEditor initial={formData} onSave={() => {}} onCancel={() => {}} readOnly />
@@ -107,6 +121,15 @@ export default function KbDetailPage() {
                 <KbApprovalPanel item={item} onUpdate={refresh} />
               </CardContent>
             </Card>
+
+            {showAdminPanel && (
+              <Card>
+                <CardHeader className="pb-2"><CardTitle className="text-sm">Admin Training</CardTitle></CardHeader>
+                <CardContent>
+                  <AdminTrainingPanel item={item} onSyncUpdate={handleSyncUpdate} />
+                </CardContent>
+              </Card>
+            )}
 
             <Card>
               <CardContent className="pt-4 space-y-2 text-xs">

@@ -59,6 +59,11 @@ function makeItem(
       { id: `v_${id}_1`, kbId: id, status: "Draft", actorId: "u_003", actorName: "KB Manager", reason: "Created", createdAt: `${base}${day}T10:00:00Z` },
       ...(status !== "Draft" ? [{ id: `v_${id}_2`, kbId: id, status: status as KbStatus, actorId: "u_001", actorName: "Arpit", reason: `Moved to ${status}`, createdAt: `${base}${day}T11:00:00Z` }] : []),
     ],
+    adminReferenceAnswer: null,
+    adminReviewedAt: null,
+    adminReviewerId: null,
+    n8nSyncedAt: null,
+    n8nSyncStatus: "never",
   };
 }
 
