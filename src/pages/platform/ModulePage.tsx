@@ -10,6 +10,7 @@ import TrainPage from "./TrainPage";
 import MonitoringPage from "./MonitoringPage";
 import ConfigurationPage from "./ConfigurationPage";
 import FeedbackPage from "./FeedbackPage";
+import IntegrationsPage from "./IntegrationsPage";
 
 const moduleMeta: Record<string, { title: string; subtitle: string }> = {
   overview: { title: "Overview", subtitle: "High-level metrics and system health at a glance." },
