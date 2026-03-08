@@ -34,8 +34,9 @@ const mockUsers: MockUser[] = [
   { id: "u_005", name: "Auditor", email: "audit@realx.in", role: "Auditor", tenantId: "realx" },
 ];
 
-// In-memory audit log
-export const au// Audit log now lives in mock-audit.tsssion: AuthSession | null = null;
+// Audit log now lives in mock-audit.ts
+
+let currentSession: AuthSession | null = null;
 
 function addAuditEvent(action: string, actorId: string) {
   // Legacy auth audit - no longer pushes to typed auditLog
