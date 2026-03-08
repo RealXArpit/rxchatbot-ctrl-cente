@@ -36,6 +36,7 @@ export interface EscalationTicket {
   status: TicketStatus;
   channel: string;
   conversationId: string;
+  sessionId: string;
   escalatedAt: string;
   firstAgentReplyAt: string | null;
   resolvedAt: string | null;
@@ -62,34 +63,36 @@ function minutesAgo(m: number): string {
 }
 
 const seedTickets: EscalationTicket[] = [
-  // 2 P0 tickets - one breached
   {
     id: "t_2001", tenantId: "realx", env: "dev", priority: "P0", status: "OPEN",
-    channel: "WEBSITE", conversationId: "c_1009", escalatedAt: minutesAgo(45),
+    channel: "WEBSITE", conversationId: "c_1009", sessionId: "web_dev_c1009::2026-02-28",
+    escalatedAt: minutesAgo(45),
     firstAgentReplyAt: null, resolvedAt: null, assigneeId: null, assigneeName: null,
     reason: "LOW_CONFIDENCE", sla: SLA_MAP.P0, resolutionNote: null, outcome: null,
     notes: [], replies: [],
   },
   {
     id: "t_2002", tenantId: "realx", env: "dev", priority: "P0", status: "IN_PROGRESS",
-    channel: "WEBSITE", conversationId: "c_1010", escalatedAt: minutesAgo(120),
+    channel: "WEBSITE", conversationId: "c_1010", sessionId: "web_dev_c1010::2026-02-28",
+    escalatedAt: minutesAgo(120),
     firstAgentReplyAt: minutesAgo(115), resolvedAt: null,
     assigneeId: "u_004", assigneeName: "Support Agent",
     reason: "POLICY_VIOLATION", sla: SLA_MAP.P0, resolutionNote: null, outcome: null,
     notes: [{ id: "n_1", ticketId: "t_2002", authorId: "u_004", authorName: "Support Agent", text: "Investigating policy issue.", visibility: "internal", createdAt: minutesAgo(110) }],
     replies: [{ id: "r_1", ticketId: "t_2002", authorId: "u_004", authorName: "Support Agent", text: "We're looking into this right away.", createdAt: minutesAgo(115) }],
   },
-  // 4 P1 tickets
   {
     id: "t_2003", tenantId: "realx", env: "dev", priority: "P1", status: "OPEN",
-    channel: "WEBSITE", conversationId: "c_1011", escalatedAt: minutesAgo(30),
+    channel: "WEBSITE", conversationId: "c_1011", sessionId: "web_dev_c1011::2026-02-28",
+    escalatedAt: minutesAgo(30),
     firstAgentReplyAt: null, resolvedAt: null, assigneeId: null, assigneeName: null,
     reason: "LOW_CONFIDENCE", sla: SLA_MAP.P1, resolutionNote: null, outcome: null,
     notes: [], replies: [],
   },
   {
     id: "t_2004", tenantId: "realx", env: "dev", priority: "P1", status: "IN_PROGRESS",
-    channel: "WEBSITE", conversationId: "c_1012", escalatedAt: minutesAgo(60),
+    channel: "WEBSITE", conversationId: "c_1012", sessionId: "web_dev_c1012::2026-02-28",
+    escalatedAt: minutesAgo(60),
     firstAgentReplyAt: minutesAgo(50), resolvedAt: null,
     assigneeId: "u_004", assigneeName: "Support Agent",
     reason: "USER_REQUEST", sla: SLA_MAP.P1, resolutionNote: null, outcome: null,
@@ -98,7 +101,8 @@ const seedTickets: EscalationTicket[] = [
   },
   {
     id: "t_2005", tenantId: "realx", env: "dev", priority: "P1", status: "OPEN",
-    channel: "WEBSITE", conversationId: "c_1013", escalatedAt: minutesAgo(20),
+    channel: "WEBSITE", conversationId: "c_1013", sessionId: "web_dev_c1013::2026-02-28",
+    escalatedAt: minutesAgo(20),
     firstAgentReplyAt: null, resolvedAt: null,
     assigneeId: "u_002", assigneeName: "Ops Manager",
     reason: "TIMEOUT", sla: SLA_MAP.P1, resolutionNote: null, outcome: null,
@@ -106,23 +110,25 @@ const seedTickets: EscalationTicket[] = [
   },
   {
     id: "t_2006", tenantId: "realx", env: "dev", priority: "P1", status: "RESOLVED",
-    channel: "WEBSITE", conversationId: "c_1014", escalatedAt: minutesAgo(180),
+    channel: "WEBSITE", conversationId: "c_1014", sessionId: "web_dev_c1014::2026-02-28",
+    escalatedAt: minutesAgo(180),
     firstAgentReplyAt: minutesAgo(170), resolvedAt: minutesAgo(90),
     assigneeId: "u_004", assigneeName: "Support Agent",
     reason: "LOW_CONFIDENCE", sla: SLA_MAP.P1, resolutionNote: "Explained the process to the user.", outcome: "RESOLVED",
     notes: [], replies: [],
   },
-  // 4 P2 tickets
   {
     id: "t_2007", tenantId: "realx", env: "dev", priority: "P2", status: "OPEN",
-    channel: "WEBSITE", conversationId: "c_1015", escalatedAt: minutesAgo(10),
+    channel: "WEBSITE", conversationId: "c_1015", sessionId: "web_dev_c1015::2026-02-28",
+    escalatedAt: minutesAgo(10),
     firstAgentReplyAt: null, resolvedAt: null, assigneeId: null, assigneeName: null,
     reason: "USER_REQUEST", sla: SLA_MAP.P2, resolutionNote: null, outcome: null,
     notes: [], replies: [],
   },
   {
     id: "t_2008", tenantId: "realx", env: "dev", priority: "P2", status: "IN_PROGRESS",
-    channel: "WEBSITE", conversationId: "c_1016", escalatedAt: minutesAgo(300),
+    channel: "WEBSITE", conversationId: "c_1016", sessionId: "web_dev_c1016::2026-02-28",
+    escalatedAt: minutesAgo(300),
     firstAgentReplyAt: minutesAgo(250), resolvedAt: null,
     assigneeId: "u_004", assigneeName: "Support Agent",
     reason: "LOW_CONFIDENCE", sla: SLA_MAP.P2, resolutionNote: null, outcome: null,
@@ -130,14 +136,16 @@ const seedTickets: EscalationTicket[] = [
   },
   {
     id: "t_2009", tenantId: "realx", env: "dev", priority: "P2", status: "OPEN",
-    channel: "WEBSITE", conversationId: "c_1017", escalatedAt: minutesAgo(5),
+    channel: "WEBSITE", conversationId: "c_1017", sessionId: "web_dev_c1017::2026-02-28",
+    escalatedAt: minutesAgo(5),
     firstAgentReplyAt: null, resolvedAt: null, assigneeId: null, assigneeName: null,
     reason: "TIMEOUT", sla: SLA_MAP.P2, resolutionNote: null, outcome: null,
     notes: [], replies: [],
   },
   {
     id: "t_2010", tenantId: "realx", env: "dev", priority: "P2", status: "RESOLVED",
-    channel: "WEBSITE", conversationId: "c_1018", escalatedAt: minutesAgo(400),
+    channel: "WEBSITE", conversationId: "c_1018", sessionId: "web_dev_c1018::2026-02-28",
+    escalatedAt: minutesAgo(400),
     firstAgentReplyAt: minutesAgo(380), resolvedAt: minutesAgo(200),
     assigneeId: "u_002", assigneeName: "Ops Manager",
     reason: "POLICY_VIOLATION", sla: SLA_MAP.P2, resolutionNote: "Reviewed and cleared.", outcome: "RESOLVED",
