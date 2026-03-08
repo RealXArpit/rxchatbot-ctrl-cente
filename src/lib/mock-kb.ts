@@ -16,6 +16,11 @@ export interface KnowledgeBaseItem {
   createdAt: string;
   updatedAt: string;
   versions: KbVersion[];
+  adminReferenceAnswer: string | null;
+  adminReviewedAt: string | null;
+  adminReviewerId: string | null;
+  n8nSyncedAt: string | null;
+  n8nSyncStatus: "synced" | "pending" | "never" | "error";
 }
 
 export interface KbVersion {
