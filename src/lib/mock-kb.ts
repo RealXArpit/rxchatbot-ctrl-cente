@@ -132,6 +132,8 @@ export function createKbItem(env: string, data: { category: string; question: st
     lastUpdated: now.slice(0, 10), status: "Draft",
     createdAt: now, updatedAt: now,
     versions: [{ id: `v_${id}_1`, kbId: id, status: "Draft", actorId, actorName, reason: "Created", createdAt: now }],
+    adminReferenceAnswer: null, adminReviewedAt: null, adminReviewerId: null,
+    n8nSyncedAt: null, n8nSyncStatus: "never",
   };
   items.push(item);
   addAudit("KB_CREATE", actorId, env);
