@@ -250,6 +250,61 @@ function ensureData(env: string) {
 
 // ── Public API ──
 
+export function appendTestSession(
+  sessionId: string,
+  env: string,
+  startedAt: string,
+  testMessages: Array<{ role: string; text: string; sentAt: string; meta?: Record<string, unknown> }>,
+) {
+  ensureData(env);
+  // Don't duplicate
+  if (conversationsCache[env]?.some((c) => c.sessionId === sessionId)) return;
+
+  const botMsgs = testMessages.filter((m) => m.role === "bot" && m.meta);
+  const lastBot = botMsgs[botMsgs.length - 1];
+  const meta = lastBot?.meta ?? {};
+
+  const conv: Conversation = {
+    id: `c_test_${sessionId.slice(-8)}`,
+    tenantId: "realx",
+    env,
+    channel: "ADMIN_TEST",
+    sessionId,
+    userIdHash: "admin_test_user",
+    startedAt,
+    endedAt: new Date().toISOString(),
+    routedTo: (meta.routedTo as "BOT" | "HUMAN") ?? "BOT",
+    confidence: (meta.confidence as number) ?? 0,
+    cacheHit: (meta.cacheHit as boolean) ?? false,
+    citations: (meta.citations as string[]) ?? [],
+    escalationReason: (meta.escalationReason as string) ?? null,
+    legalHold: false,
+    logId: (meta.logId as string) ?? sessionId,
+    tokensUsed: testMessages.reduce((sum, m) => sum + ((m.meta?.tokensUsed as number) ?? 0), 0),
+    correlationId: sessionId,
+    escalationPriority: null,
+    sentiment: "neutral",
+    intent: "FAQ",
+    feedback: null,
+    adminReferenceAnswer: null,
+  };
+
+  const msgs: Message[] = testMessages
+    .filter((m) => m.role !== "error")
+    .map((m, i) => ({
+      id: `${conv.id}_m${i}`,
+      conversationId: conv.id,
+      role: m.role === "bot" ? "bot" : "user",
+      text: m.text,
+      textRedacted: m.text,
+      createdAt: m.sentAt,
+      piiRedacted: false,
+    }));
+
+  conversationsCache[env]!.unshift(conv);
+  messagesCache[conv.id] = msgs;
+}
+
 export function getConversations(
   env: string,
   filters: ConversationFilters = {},
