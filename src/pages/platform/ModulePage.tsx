@@ -11,6 +11,7 @@ import MonitoringPage from "./MonitoringPage";
 import ConfigurationPage from "./ConfigurationPage";
 import FeedbackPage from "./FeedbackPage";
 import IntegrationsPage from "./IntegrationsPage";
+import AuditPage from "./AuditPage";
 
 const moduleMeta: Record<string, { title: string; subtitle: string }> = {
   overview: { title: "Overview", subtitle: "High-level metrics and system health at a glance." },

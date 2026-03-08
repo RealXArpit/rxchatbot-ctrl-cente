@@ -40,14 +40,8 @@ export const auditLog: AuditLogEvent[] = [];
 let currentSession: AuthSession | null = null;
 
 function addAuditEvent(action: string, actorId: string) {
-  auditLog.push({
-    id: `evt_${Date.now()}`,
-    tenantId: "realx",
-    env: "dev",
-    action,
-    actorId,
-    createdAt: new Date().toISOString(),
-  });
+  // Legacy auth audit - no longer pushes to typed auditLog
+  // Real audit events go through mock-audit.ts appendAuditEvent
 }
 
 export function mockLogin(email: string, password: string, tenantId: string): { ok: boolean; session?: AuthSession; error?: string } {
