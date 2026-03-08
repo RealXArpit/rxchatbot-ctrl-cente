@@ -3,6 +3,8 @@ import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { TestChatMessage, TestChatSession } from "@/types/test-chat";
 import { toast } from "@/hooks/use-toast";
+import { appendTestSession } from "@/lib/mock-conversations";
+import { saveSessionToHistory } from "@/components/test-chat/SessionHistoryDrawer";
 
 const SESSION_KEY = "rxchat_test_session_id";
 
@@ -56,6 +58,30 @@ export function useTestChat() {
   const close = useCallback(() => setIsOpen(false), []);
   const toggleDebug = useCallback(() => setShowDebug((p) => !p), []);
 
+  const persistSession = useCallback((sid: string, msgs: TestChatMessage[]) => {
+    const nonErrorMsgs = msgs.filter((m) => m.role !== "error" && !m.isLoading);
+    if (nonErrorMsgs.length < 2) return;
+
+    // Persist to mock conversation store
+    appendTestSession(
+      sid,
+      env,
+      nonErrorMsgs[0]?.sentAt ?? new Date().toISOString(),
+      nonErrorMsgs.map((m) => ({ role: m.role, text: m.text, sentAt: m.sentAt, meta: m.meta as Record<string, unknown> | undefined })),
+    );
+
+    // Persist to localStorage history
+    const firstUserMsg = nonErrorMsgs.find((m) => m.role === "user");
+    saveSessionToHistory({
+      sessionId: sid,
+      env,
+      startedAt: nonErrorMsgs[0]?.sentAt ?? new Date().toISOString(),
+      messageCount: nonErrorMsgs.length,
+      lastMessage: firstUserMsg?.text ?? "Test session",
+      messages: nonErrorMsgs,
+    });
+  }, [env]);
+
   const sendMessage = useCallback(async (text: string) => {
     if (!client || !text.trim()) return;
     const sid = getSessionId();
@@ -106,7 +132,12 @@ export function useTestChat() {
         },
       };
 
-      setMessages((prev) => [...prev.slice(0, -1), botMsg]);
+      setMessages((prev) => {
+        const updated = [...prev.slice(0, -1), botMsg];
+        // Persist after each successful exchange
+        persistSession(sid, updated);
+        return updated;
+      });
     } catch (err) {
       const errorMsg: TestChatMessage = {
         id: crypto.randomUUID(),
@@ -121,7 +152,7 @@ export function useTestChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [client, getSessionId, authSession]);
+  }, [client, getSessionId, authSession, persistSession]);
 
   const sendFeedback = useCallback(async (logId: string, vote: 1 | -1) => {
     if (!client) return;
@@ -144,6 +175,10 @@ export function useTestChat() {
     setMessages([]);
   }, [env]);
 
+  const restoreSession = useCallback((msgs: TestChatMessage[]) => {
+    setMessages(msgs);
+  }, []);
+
   return {
     session,
     isOpen,
@@ -155,5 +190,6 @@ export function useTestChat() {
     clearSession,
     showDebug,
     toggleDebug,
+    restoreSession,
   };
 }

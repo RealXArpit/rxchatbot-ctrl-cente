@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PageHeader } from "@/components/platform/PageHeader";
 import { RequireRole } from "@/components/platform/RequireRole";
 import { routeMetadata } from "@/lib/mock-api";
@@ -13,10 +14,23 @@ import { LiveDataBanner } from "@/components/chat-logs/LiveDataBanner";
 
 export default function ChatLogsPage() {
   const { env } = useTenant();
-  const [filters, setFilters] = useState<ConversationFilters>({});
+  const [searchParams] = useSearchParams();
+  const sessionIdParam = searchParams.get("sessionId");
+
+  const [filters, setFilters] = useState<ConversationFilters>(() =>
+    sessionIdParam ? { q: sessionIdParam } : {}
+  );
   const [page, setPage] = useState(1);
   const [columns, setColumns] = useState<ColumnKey[]>(loadColumns);
   const pageSize = 25;
+
+  // Apply sessionId param on mount / change
+  useEffect(() => {
+    if (sessionIdParam) {
+      setFilters((prev) => ({ ...prev, q: sessionIdParam }));
+      setPage(1);
+    }
+  }, [sessionIdParam]);
 
   const result = useMemo(
     () => getConversations(env, filters, page, pageSize),
