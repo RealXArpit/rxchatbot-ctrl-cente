@@ -4,7 +4,7 @@ export interface Conversation {
   id: string;
   tenantId: string;
   env: string;
-  channel: "WEBSITE" | "WHATSAPP" | "API";
+  channel: "WEBSITE" | "WHATSAPP" | "API" | "ADMIN_TEST";
   sessionId: string;
   userIdHash: string;
   startedAt: string;

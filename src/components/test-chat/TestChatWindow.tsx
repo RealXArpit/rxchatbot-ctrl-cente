@@ -1,5 +1,6 @@
-import { useRef, useEffect, useState, KeyboardEvent } from "react";
-import { X, Trash2, Bug, Send } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { X, Trash2, Bug, Send, ExternalLink, History } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useTenant } from "@/contexts/TenantContext";
 import { TestChatMessage } from "./TestChatMessage";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +11,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { SessionHistoryDrawer } from "./SessionHistoryDrawer";
 
 interface Props {
   session: TestChatSession;
@@ -20,6 +22,7 @@ interface Props {
   onClear: () => void;
   onClose: () => void;
   onToggleDebug: () => void;
+  onRestoreSession?: (messages: import("@/types/test-chat").TestChatMessage[]) => void;
 }
 
 export function TestChatWindow({
@@ -31,12 +34,14 @@ export function TestChatWindow({
   onClear,
   onClose,
   onToggleDebug,
+  onRestoreSession,
 }: Props) {
-  const { envConfig } = useTenant();
+  const { envConfig, env } = useTenant();
+  const navigate = useNavigate();
   const [input, setInput] = useState("");
+  const [historyOpen, setHistoryOpen] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll on new messages
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [session.messages.length]);
@@ -47,14 +52,22 @@ export function TestChatWindow({
     setInput("");
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
   };
 
+  const handleViewInLogs = () => {
+    if (session.sessionId) {
+      navigate(`/realx/${env}/chat-logs?sessionId=${encodeURIComponent(session.sessionId)}`);
+      onClose();
+    }
+  };
+
   const envLabel = session.env === "prod" ? "PROD" : "DEV";
+  const hasMessages = session.messages.some((m) => m.role !== "error");
 
   return (
     <div className="w-[380px] h-[560px] bg-card border border-border rounded-xl shadow-lg flex flex-col overflow-hidden animate-scale-in">
@@ -75,6 +88,24 @@ export function TestChatWindow({
           </Badge>
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          {hasMessages && session.sessionId && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button onClick={handleViewInLogs} className="p-1.5 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
+                  <ExternalLink className="h-3.5 w-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">View in Logs →</TooltipContent>
+            </Tooltip>
+          )}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button onClick={() => setHistoryOpen(true)} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                <History className="h-3.5 w-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Session history</TooltipContent>
+          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <button onClick={onClear} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
@@ -87,6 +118,11 @@ export function TestChatWindow({
             <X className="h-4 w-4" />
           </button>
         </div>
+      </div>
+
+      {/* Live DB warning */}
+      <div className="px-3 py-1 text-[10px] text-warning bg-warning/10 border-b border-border">
+        ⚠️ Test messages are logged in your live database.
       </div>
 
       {/* Webhook URL hint */}
@@ -158,6 +194,14 @@ export function TestChatWindow({
           </button>
         </div>
       </div>
+
+      {/* Session History Drawer */}
+      <SessionHistoryDrawer
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        onRestore={onRestoreSession}
+        currentEnv={env}
+      />
     </div>
   );
 }
