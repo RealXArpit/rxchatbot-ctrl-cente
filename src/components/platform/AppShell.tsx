@@ -3,6 +3,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { TenantProvider } from "@/contexts/TenantContext";
 import { LeftSidebarNav } from "./LeftSidebarNav";
 import { TopBar } from "./TopBar";
+import { TestChatWidget } from "@/components/test-chat/TestChatWidget";
 
 export function AppShell() {
   return (
@@ -17,6 +18,7 @@ export function AppShell() {
             </main>
           </div>
         </div>
+        <TestChatWidget />
       </SidebarProvider>
     </TenantProvider>
   );
