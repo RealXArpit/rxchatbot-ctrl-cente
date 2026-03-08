@@ -36,12 +36,31 @@ export interface IntegrationCredential {
   status: "active" | "revoked";
 }
 
+export type AuditAction =
+  | "KB_PUSH"
+  | "KB_DEPRECATE"
+  | "AGENT_REPLY"
+  | "AGENT_TAKEOVER"
+  | "AGENT_RESOLVE"
+  | "FEEDBACK_SUBMIT"
+  | "CONFIG_PROPOSE"
+  | "CONFIG_APPROVE"
+  | "CONFIG_PUBLISH"
+  | "CONFIG_ROLLBACK"
+  | "USER_LOGIN"
+  | "USER_LOGOUT";
+
 export interface AuditLogEvent {
   id: string;
   tenantId: string;
-  env: string;
-  action: string;
+  env: "dev" | "prod";
+  action: AuditAction;
   actorId: string;
+  actorName: string;
+  targetType: "KB_ENTRY" | "ESCALATION" | "CHAT_LOG" | "CONFIG" | "CREDENTIAL" | "USER";
+  targetId: string;
+  payload: Record<string, unknown>;
+  outcome: "success" | "failure";
   createdAt: string;
 }
 
