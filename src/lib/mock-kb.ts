@@ -16,6 +16,11 @@ export interface KnowledgeBaseItem {
   createdAt: string;
   updatedAt: string;
   versions: KbVersion[];
+  adminReferenceAnswer: string | null;
+  adminReviewedAt: string | null;
+  adminReviewerId: string | null;
+  n8nSyncedAt: string | null;
+  n8nSyncStatus: "synced" | "pending" | "never" | "error";
 }
 
 export interface KbVersion {
@@ -54,6 +59,11 @@ function makeItem(
       { id: `v_${id}_1`, kbId: id, status: "Draft", actorId: "u_003", actorName: "KB Manager", reason: "Created", createdAt: `${base}${day}T10:00:00Z` },
       ...(status !== "Draft" ? [{ id: `v_${id}_2`, kbId: id, status: status as KbStatus, actorId: "u_001", actorName: "Arpit", reason: `Moved to ${status}`, createdAt: `${base}${day}T11:00:00Z` }] : []),
     ],
+    adminReferenceAnswer: null,
+    adminReviewedAt: null,
+    adminReviewerId: null,
+    n8nSyncedAt: null,
+    n8nSyncStatus: "never",
   };
 }
 
@@ -122,6 +132,8 @@ export function createKbItem(env: string, data: { category: string; question: st
     lastUpdated: now.slice(0, 10), status: "Draft",
     createdAt: now, updatedAt: now,
     versions: [{ id: `v_${id}_1`, kbId: id, status: "Draft", actorId, actorName, reason: "Created", createdAt: now }],
+    adminReferenceAnswer: null, adminReviewedAt: null, adminReviewerId: null,
+    n8nSyncedAt: null, n8nSyncStatus: "never",
   };
   items.push(item);
   addAudit("KB_CREATE", actorId, env);

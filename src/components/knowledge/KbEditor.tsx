@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getKbCategories } from "@/lib/mock-kb";
+import { useTenant } from "@/contexts/TenantContext";
+import { toast } from "sonner";
+import { Loader2, Upload } from "lucide-react";
 
 interface KbFormData {
   category: string;
@@ -19,12 +22,16 @@ interface Props {
   onSave: (data: KbFormData) => void;
   onCancel: () => void;
   readOnly?: boolean;
+  kbId?: string;
+  isNew?: boolean;
 }
 
-export function KbEditor({ initial, onSave, onCancel, readOnly }: Props) {
+export function KbEditor({ initial, onSave, onCancel, readOnly, kbId, isNew }: Props) {
   const categories = getKbCategories();
+  const { client } = useTenant();
   const [form, setForm] = useState<KbFormData>(initial ?? { category: "", question: "", answer: "", keywords: "", sourceUrl: "" });
   const [errors, setErrors] = useState<Partial<Record<keyof KbFormData, string>>>({});
+  const [pushing, setPushing] = useState(false);
 
   const validate = (): boolean => {
     const e: Partial<Record<keyof KbFormData, string>> = {};
@@ -41,6 +48,27 @@ export function KbEditor({ initial, onSave, onCancel, readOnly }: Props) {
 
   const handleSubmit = () => {
     if (validate()) onSave(form);
+  };
+
+  const handleSaveAndPush = async () => {
+    if (!validate() || !client) return;
+    onSave(form);
+    setPushing(true);
+    try {
+      await client.adminAction({
+        operation: isNew ? "ADD_KB_ENTRY" : "UPDATE_KB_ENTRY",
+        ...(kbId ? { kbId } : {}),
+        category: form.category,
+        question: form.question,
+        answer: form.answer,
+        keywords: form.keywords,
+      });
+      toast.success("Saved and pushed to n8n");
+    } catch {
+      toast.error("Saved locally but failed to push to n8n");
+    } finally {
+      setPushing(false);
+    }
   };
 
   const field = (key: keyof KbFormData, label: string) => (
@@ -79,7 +107,11 @@ export function KbEditor({ initial, onSave, onCancel, readOnly }: Props) {
       </div>
       {!readOnly && (
         <div className="flex gap-2 pt-2">
-          <Button size="sm" onClick={handleSubmit}>Save</Button>
+          <Button size="sm" onClick={handleSubmit}>Save Draft</Button>
+          <Button size="sm" variant="outline" onClick={handleSaveAndPush} disabled={pushing} className="gap-1.5">
+            {pushing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+            Save + Push to n8n
+          </Button>
           <Button size="sm" variant="outline" onClick={onCancel}>Cancel</Button>
         </div>
       )}
