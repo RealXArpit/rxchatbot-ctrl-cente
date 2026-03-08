@@ -16,7 +16,10 @@ import { InternalNotes } from "@/components/escalations/InternalNotes";
 import { ResolutionForm } from "@/components/escalations/ResolutionForm";
 import { TakeoverShell } from "@/components/escalations/TakeoverShell";
 import { CreateKbFromTicketButton } from "@/components/escalations/CreateKbFromTicketButton";
+import { AgentReplyForm } from "@/components/escalations/AgentReplyForm";
+import { AgentPollBanner } from "@/components/escalations/AgentPollBanner";
 import { toast } from "sonner";
+import type { Role } from "@/lib/mock-api";
 
 const priorityColor: Record<string, string> = {
   P0: "bg-destructive text-destructive-foreground",
@@ -24,16 +27,19 @@ const priorityColor: Record<string, string> = {
   P2: "bg-muted text-muted-foreground",
 };
 
+const CAN_REPLY_ROLES: Role[] = ["SupportAgent", "OpsManager", "SuperAdmin"];
+
 export default function EscalationDetailPage() {
   const { ticketId, env } = useParams<{ ticketId: string; env: string }>();
   const navigate = useNavigate();
   const { session } = useAuth();
   const role = session?.user.role;
   const isAuditor = role === "Auditor";
-  const canReply = role === "SupportAgent" || role === "OpsManager" || role === "SuperAdmin";
+  const canReply = CAN_REPLY_ROLES.includes(role as Role);
   const canResolve = canReply;
 
   const [ticket, setTicket] = useState<EscalationTicket | null>(() => getEscalationById(ticketId ?? ""));
+  const [lastSent, setLastSent] = useState<Date | null>(null);
 
   const refresh = useCallback(() => {
     setTicket(getEscalationById(ticketId ?? ""));
@@ -74,6 +80,14 @@ export default function EscalationDetailPage() {
     toast.success("Ticket resolved");
   };
 
+  const handleAgentSuccess = (op: string) => {
+    setLastSent(new Date());
+    if (op === "RESOLVE") {
+      resolveTicket(ticket.id, "Resolved via agent intervention", "RESOLVED");
+      refresh();
+    }
+  };
+
   return (
     <div>
       <div className="px-6 pt-4 pb-2">
@@ -96,6 +110,7 @@ export default function EscalationDetailPage() {
             <CardContent className="space-y-2 text-xs">
               <div className="flex justify-between"><span className="text-muted-foreground">Reason</span><span>{ticket.reason.replace(/_/g, " ")}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Assignee</span><span>{ticket.assigneeName ?? "Unassigned"}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Session</span><span className="font-mono text-[10px] truncate max-w-[140px]">{ticket.sessionId}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">Escalated</span><span className="tabular-nums">{new Date(ticket.escalatedAt).toLocaleString()}</span></div>
               {ticket.firstAgentReplyAt && <div className="flex justify-between"><span className="text-muted-foreground">First Reply</span><span className="tabular-nums">{new Date(ticket.firstAgentReplyAt).toLocaleString()}</span></div>}
               {ticket.resolvedAt && <div className="flex justify-between"><span className="text-muted-foreground">Resolved</span><span className="tabular-nums">{new Date(ticket.resolvedAt).toLocaleString()}</span></div>}
@@ -129,9 +144,28 @@ export default function EscalationDetailPage() {
           </div>
         </div>
 
-        {/* Right: Takeover + Notes + Resolution */}
+        {/* Right: Takeover + Agent Reply + Notes + Resolution */}
         <div className="lg:col-span-2 space-y-4">
-          <TakeoverShell replies={ticket.replies} onReply={handleReply} readOnly={isAuditor || !canReply} />
+          <TakeoverShell
+            replies={ticket.replies}
+            onReply={handleReply}
+            readOnly={isAuditor || !canReply}
+            sessionId={ticket.sessionId}
+            ticketId={ticket.id}
+          />
+
+          {/* Agent Poll Banner */}
+          {lastSent && <AgentPollBanner sessionId={ticket.sessionId} sentAt={lastSent} />}
+
+          {/* Agent Reply Form — only for allowed roles */}
+          {canReply && ticket.status !== "RESOLVED" && ticket.status !== "CLOSED" && (
+            <AgentReplyForm
+              ticketId={ticket.id}
+              sessionId={ticket.sessionId}
+              onSuccess={handleAgentSuccess}
+            />
+          )}
+
           <InternalNotes notes={ticket.notes} onAdd={handleAddNote} readOnly={isAuditor} />
           {canResolve && <ResolutionForm ticket={ticket} onResolve={handleResolve} />}
           {isAuditor && ticket.status !== "RESOLVED" && (
