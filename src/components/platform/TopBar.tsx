@@ -1,5 +1,6 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { EnvironmentSelector } from "./EnvironmentSelector";
+import { WebhookStatusDot } from "./WebhookStatusDot";
 import { OrgTeamSwitcher } from "./OrgTeamSwitcher";
 import { UserMenu } from "./UserMenu";
 import { RoleBadge } from "./RoleBadge";
@@ -21,6 +22,7 @@ export function TopBar() {
         <div className="flex items-center gap-3">
           {session && <RoleBadge role={session.user.role} />}
           <EnvironmentSelector />
+          <WebhookStatusDot />
           <div className="h-5 w-px bg-border" />
           <button className="relative text-muted-foreground hover:text-foreground transition-colors">
             <Bell className="h-5 w-5" />
