@@ -36,6 +36,7 @@ export interface EscalationTicket {
   status: TicketStatus;
   channel: string;
   conversationId: string;
+  sessionId: string;
   escalatedAt: string;
   firstAgentReplyAt: string | null;
   resolvedAt: string | null;
