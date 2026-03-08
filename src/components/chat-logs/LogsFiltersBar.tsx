@@ -61,6 +61,7 @@ export function LogsFiltersBar({ filters, onChange }: LogsFiltersBarProps) {
           <SelectItem value="WEBSITE">Website</SelectItem>
           <SelectItem value="WHATSAPP">WhatsApp</SelectItem>
           <SelectItem value="API">API</SelectItem>
+          <SelectItem value="ADMIN_TEST">Admin Test</SelectItem>
         </SelectContent>
       </Select>
 

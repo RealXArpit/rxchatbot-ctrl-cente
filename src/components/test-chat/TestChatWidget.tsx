@@ -24,6 +24,7 @@ export function TestChatWidget() {
           onClear={chat.clearSession}
           onClose={chat.close}
           onToggleDebug={chat.toggleDebug}
+          onRestoreSession={chat.restoreSession}
         />
       )}
       {!chat.isOpen && (
