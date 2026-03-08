@@ -40,6 +40,7 @@ export default function ModulePage() {
   if (module === "monitoring") return <MonitoringPage />;
   if (module === "configuration") return <ConfigurationPage />;
   if (module === "feedback") return <FeedbackPage />;
+  if (module === "integrations") return <IntegrationsPage />;
 
   const allowedRoles = routeMetadata[module!]?.allowedRoles ?? [];
 
