@@ -1,6 +1,6 @@
 // Mock auth API layer
 
-import type { Role, AuditLogEvent } from "./mock-api";
+import type { Role } from "./mock-api";
 
 export interface MockUser {
   id: string;
