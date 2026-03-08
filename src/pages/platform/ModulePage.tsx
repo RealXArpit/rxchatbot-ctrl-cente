@@ -42,6 +42,7 @@ export default function ModulePage() {
   if (module === "configuration") return <ConfigurationPage />;
   if (module === "feedback") return <FeedbackPage />;
   if (module === "integrations") return <IntegrationsPage />;
+  if (module === "audit") return <AuditPage />;
 
   const allowedRoles = routeMetadata[module!]?.allowedRoles ?? [];
 
