@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,8 +13,38 @@ import { AdminTrainingPanel } from "@/components/knowledge/AdminTrainingPanel";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 import type { Role } from "@/lib/mock-api";
+import { LoadingSkeleton } from "@/components/platform/LoadingSkeleton";
+import { ErrorPanel } from "@/components/platform/ErrorPanel";
+import { useKbItems, useUpdateKbItem } from "@/hooks/useKbItems";
 
 const ADMIN_PANEL_ROLES: Role[] = ["KnowledgeManager", "OpsManager", "SuperAdmin"];
+
+function mapLiveRow(row: any): KnowledgeBaseItem {
+  return {
+    id: row.id ?? "",
+    tenantId: "realx",
+    env: "dev",
+    category: row.category ?? "",
+    question: row.question ?? "",
+    answer: row.answer ?? "",
+    keywords: Array.isArray(row.keywords)
+      ? row.keywords
+      : typeof row.keywords === "string"
+        ? row.keywords.split(",").map((k: string) => k.trim()).filter(Boolean)
+        : [],
+    sourceUrl: row.source_url ?? "",
+    lastUpdated: row.updated_at ?? row.created_at ?? "",
+    status: row.status ?? "Draft",
+    createdAt: row.created_at ?? "",
+    updatedAt: row.updated_at ?? "",
+    versions: [],
+    adminReferenceAnswer: row.admin_reference_answer ?? null,
+    adminReviewedAt: row.admin_reviewed_at ?? null,
+    adminReviewerId: row.admin_reviewer_id ?? null,
+    n8nSyncedAt: row.n8n_synced_at ?? null,
+    n8nSyncStatus: row.n8n_sync_status ?? "never",
+  };
+}
 
 export default function KbDetailPage() {
   const { kbId, env } = useParams<{ kbId: string; env: string }>();
@@ -27,12 +57,40 @@ export default function KbDetailPage() {
   const canEdit = role === "KnowledgeManager" || role === "OpsManager" || role === "SuperAdmin";
   const showAdminPanel = !isNew && ADMIN_PANEL_ROLES.includes(role);
 
-  const [item, setItem] = useState<KnowledgeBaseItem | null>(() => isNew ? null : getKbById(kbId ?? ""));
+  const { data: liveData, isLoading, error, refetch } = useKbItems();
+  const updateMutation = useUpdateKbItem();
+
+  const liveItem = useMemo(() => {
+    if (!liveData || !kbId || isNew) return null;
+    const row = liveData.find((r: any) => r.id === kbId);
+    return row ? mapLiveRow(row) : null;
+  }, [liveData, kbId, isNew]);
+
+  const [mockItem, setMockItem] = useState<KnowledgeBaseItem | null>(() => isNew ? null : getKbById(kbId ?? ""));
+  const item = liveItem ?? mockItem;
+
   const [editing, setEditing] = useState(isNew);
 
   const refresh = useCallback(() => {
-    if (!isNew && kbId) setItem(getKbById(kbId));
-  }, [kbId, isNew]);
+    refetch();
+    if (!isNew && kbId) setMockItem(getKbById(kbId));
+  }, [kbId, isNew, refetch]);
+
+  if (isLoading && !isNew) {
+    return (
+      <div className="p-6">
+        <LoadingSkeleton />
+      </div>
+    );
+  }
+
+  if (error && !isNew) {
+    return (
+      <div className="p-6">
+        <ErrorPanel onRetry={() => refetch()} />
+      </div>
+    );
+  }
 
   if (!isNew && !item) {
     return (
@@ -47,6 +105,34 @@ export default function KbDetailPage() {
 
   const handleSave = (data: { category: string; question: string; answer: string; keywords: string; sourceUrl: string }) => {
     const kws = data.keywords.split(",").map((k) => k.trim().toLowerCase()).filter(Boolean);
+
+    // Try Supabase mutation for existing items
+    if (!isNew && item) {
+      updateMutation.mutate(
+        {
+          id: item.id,
+          category: data.category,
+          question: data.question,
+          answer: data.answer,
+          keywords: data.keywords,
+        },
+        {
+          onSuccess: () => {
+            toast.success("KB item saved to database");
+            setEditing(false);
+          },
+          onError: () => {
+            // Fallback to mock
+            updateKbItem(item.id, { ...data, keywords: kws }, session!.user.id);
+            toast.success("KB item updated (local)");
+            refresh();
+            setEditing(false);
+          },
+        }
+      );
+      return;
+    }
+
     if (isNew) {
       const created = createKbItem(env ?? "dev", { ...data, keywords: kws, sourceUrl: data.sourceUrl }, session!.user.id, session!.user.name);
       toast.success("KB item created");
@@ -62,7 +148,7 @@ export default function KbDetailPage() {
   const handleSyncUpdate = (updates: Partial<KnowledgeBaseItem>) => {
     if (item) {
       Object.assign(item, updates);
-      setItem({ ...item });
+      setMockItem({ ...item });
     }
   };
 
