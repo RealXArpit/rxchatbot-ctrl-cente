@@ -66,7 +66,7 @@ export default function TrainPage() {
 
     return source.filter((item) => {
       if (filters.q && !item.question.toLowerCase().includes(filters.q.toLowerCase()) && !item.answer.toLowerCase().includes(filters.q.toLowerCase())) return false;
-      if (filters.status && filters.status !== "all-statuses" && item.status !== filters.status) return false;
+      if (filters.status && (filters.status as string) !== "all-statuses" && item.status !== filters.status) return false;
       if (filters.category && item.category !== filters.category) return false;
       return true;
     });
