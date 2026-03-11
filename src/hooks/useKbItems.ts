@@ -76,3 +76,19 @@ export function useAddKbItem() {
     },
   });
 }
+
+export function useDeprecateKbItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('knowledge_base')
+        .update({ status: 'DEPRECATED', updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['knowledge_base'] });
+    },
+  });
+}

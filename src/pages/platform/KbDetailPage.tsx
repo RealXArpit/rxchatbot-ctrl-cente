@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/platform/PageHeader";
@@ -15,7 +15,8 @@ import { Link } from "react-router-dom";
 import type { Role } from "@/lib/mock-api";
 import { LoadingSkeleton } from "@/components/platform/LoadingSkeleton";
 import { ErrorPanel } from "@/components/platform/ErrorPanel";
-import { useKbItems, useUpdateKbItem, useAddKbItem } from "@/hooks/useKbItems";
+import { useKbItems, useUpdateKbItem, useAddKbItem, useDeprecateKbItem } from "@/hooks/useKbItems";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 const ADMIN_PANEL_ROLES: Role[] = ["KnowledgeManager", "OpsManager", "SuperAdmin"];
 
@@ -34,7 +35,15 @@ function mapLiveRow(row: any): KnowledgeBaseItem {
         : [],
     sourceUrl: row.source_url ?? "",
     lastUpdated: row.updated_at ?? row.created_at ?? "",
-    status: row.status ?? "Draft",
+    status: (() => {
+      const s = (row.status ?? "").toUpperCase();
+      if (s === "DEPRECATED" || s === "ARCHIVED") return "Archived";
+      if (s === "APPROVED") return "Approved";
+      if (s === "PUBLISHED") return "Published";
+      if (s === "PROPOSED") return "Proposed";
+      if (s === "ACTIVE") return "Approved";
+      return "Draft";
+    })(),
     createdAt: row.created_at ?? "",
     updatedAt: row.updated_at ?? "",
     versions: [],
@@ -60,6 +69,8 @@ export default function KbDetailPage() {
   const { data: liveData, isLoading, error, refetch } = useKbItems();
   const updateMutation = useUpdateKbItem();
   const addMutation = useAddKbItem();
+  const deprecateMutation = useDeprecateKbItem();
+  const [showDeprecateModal, setShowDeprecateModal] = useState(false);
 
   const liveItem = useMemo(() => {
     if (!liveData || !kbId || isNew) return null;
@@ -70,6 +81,14 @@ export default function KbDetailPage() {
   const [mockItem, setMockItem] = useState<KnowledgeBaseItem | null>(() => isNew ? null : getKbById(kbId ?? ""));
   const item = liveItem ?? mockItem;
 
+  const searchParams = new URLSearchParams(window.location.search);
+  const prefillData = isNew ? {
+    category: searchParams.get("prefill_category") ?? "",
+    question: searchParams.get("prefill_question") ?? "",
+    answer: searchParams.get("prefill_answer") ?? "",
+    keywords: searchParams.get("prefill_keywords") ?? "",
+    sourceUrl: "",
+  } : undefined;
   const [editing, setEditing] = useState(isNew);
 
   const refresh = useCallback(() => {
@@ -176,7 +195,27 @@ export default function KbDetailPage() {
     answer: item.answer,
     keywords: item.keywords.join(", "),
     sourceUrl: item.sourceUrl,
-  } : undefined;
+  } : prefillData;
+
+  const handleDeprecateAndRevise = async () => {
+    if (!item) return;
+    deprecateMutation.mutate(item.id, {
+      onSuccess: () => {
+        toast.success("Entry deprecated. Creating revised version...");
+        setShowDeprecateModal(false);
+        const params = new URLSearchParams({
+          prefill_category: item.category,
+          prefill_question: item.question,
+          prefill_answer: item.answer,
+          prefill_keywords: item.keywords.join(", "),
+        });
+        navigate(`/realx/${env}/train/kb/new?${params.toString()}`);
+      },
+      onError: () => {
+        toast.error("Failed to deprecate entry. Please try again.");
+      },
+    });
+  };
 
   return (
     <div>
@@ -193,8 +232,16 @@ export default function KbDetailPage() {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm">{editing ? "Edit" : "Details"}</CardTitle>
-                {!editing && canEdit && !isNew && item?.status === "Draft" && (
+                {!editing && canEdit && !isNew && item?.status !== "Archived" && (
                   <Button size="sm" variant="outline" className="text-xs" onClick={() => setEditing(true)}>Edit</Button>
+                )}
+                {!editing && canEdit && !isNew && item?.status !== "Archived" && (
+                  <Button size="sm" variant="destructive" className="text-xs" onClick={() => setShowDeprecateModal(true)}>
+                    Deprecate &amp; Revise
+                  </Button>
+                )}
+                {!editing && !isNew && item?.status === "Archived" && (
+                  <span className="text-xs text-muted-foreground font-medium">Deprecated</span>
                 )}
                 {isSupportAgent && !isNew && (
                   <Button size="sm" variant="outline" className="text-xs" disabled>Suggest Edit</Button>
@@ -251,6 +298,30 @@ export default function KbDetailPage() {
           </div>
         )}
       </div>
+
+      <Dialog open={showDeprecateModal} onOpenChange={setShowDeprecateModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Deprecate this entry?
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            This will mark the current entry as deprecated and open a new entry form
+            pre-filled with its content so you can make corrections.
+            The bot will stop using the deprecated entry immediately after next sync.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeprecateModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeprecateAndRevise} disabled={deprecateMutation.isPending}>
+              {deprecateMutation.isPending ? "Deprecating…" : "Deprecate & Create Revised"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
