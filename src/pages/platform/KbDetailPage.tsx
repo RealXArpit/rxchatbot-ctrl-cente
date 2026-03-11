@@ -296,6 +296,30 @@ export default function KbDetailPage() {
           </div>
         )}
       </div>
+
+      <Dialog open={showDeprecateModal} onOpenChange={setShowDeprecateModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Deprecate this entry?
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            This will mark the current entry as deprecated and open a new entry form
+            pre-filled with its content so you can make corrections.
+            The bot will stop using the deprecated entry immediately after next sync.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeprecateModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeprecateAndRevise} disabled={deprecateMutation.isPending}>
+              {deprecateMutation.isPending ? "Deprecating…" : "Deprecate & Create Revised"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
