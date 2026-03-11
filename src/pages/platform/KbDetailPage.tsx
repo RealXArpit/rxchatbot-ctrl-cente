@@ -135,9 +135,26 @@ export default function KbDetailPage() {
     }
 
     if (isNew) {
-      const created = createKbItem(env ?? "dev", { ...data, keywords: kws, sourceUrl: data.sourceUrl }, session!.user.id, session!.user.name);
-      toast.success("KB item created");
-      navigate(`/realx/${env}/train/kb/${created.id}`, { replace: true });
+      addMutation.mutate(
+        {
+          category: data.category,
+          question: data.question,
+          answer: data.answer,
+          keywords: data.keywords,
+        },
+        {
+          onSuccess: (newRow) => {
+            toast.success("Entry added to knowledge base");
+            navigate(`/realx/${env}/train/kb/${newRow.id}`, { replace: true });
+          },
+          onError: (err: any) => {
+            toast.error(err?.message ?? "Failed to add entry");
+            // Fallback to mock
+            const created = createKbItem(env ?? "dev", { ...data, keywords: kws, sourceUrl: data.sourceUrl }, session!.user.id, session!.user.name);
+            navigate(`/realx/${env}/train/kb/${created.id}`, { replace: true });
+          },
+        }
+      );
     } else {
       updateKbItem(item!.id, { ...data, keywords: kws }, session!.user.id);
       toast.success("KB item updated");
