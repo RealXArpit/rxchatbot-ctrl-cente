@@ -59,6 +59,7 @@ export default function KbDetailPage() {
 
   const { data: liveData, isLoading, error, refetch } = useKbItems();
   const updateMutation = useUpdateKbItem();
+  const addMutation = useAddKbItem();
 
   const liveItem = useMemo(() => {
     if (!liveData || !kbId || isNew) return null;
