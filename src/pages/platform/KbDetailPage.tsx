@@ -15,7 +15,7 @@ import { Link } from "react-router-dom";
 import type { Role } from "@/lib/mock-api";
 import { LoadingSkeleton } from "@/components/platform/LoadingSkeleton";
 import { ErrorPanel } from "@/components/platform/ErrorPanel";
-import { useKbItems, useUpdateKbItem } from "@/hooks/useKbItems";
+import { useKbItems, useUpdateKbItem, useAddKbItem } from "@/hooks/useKbItems";
 
 const ADMIN_PANEL_ROLES: Role[] = ["KnowledgeManager", "OpsManager", "SuperAdmin"];
 
@@ -59,6 +59,7 @@ export default function KbDetailPage() {
 
   const { data: liveData, isLoading, error, refetch } = useKbItems();
   const updateMutation = useUpdateKbItem();
+  const addMutation = useAddKbItem();
 
   const liveItem = useMemo(() => {
     if (!liveData || !kbId || isNew) return null;
@@ -134,9 +135,26 @@ export default function KbDetailPage() {
     }
 
     if (isNew) {
-      const created = createKbItem(env ?? "dev", { ...data, keywords: kws, sourceUrl: data.sourceUrl }, session!.user.id, session!.user.name);
-      toast.success("KB item created");
-      navigate(`/realx/${env}/train/kb/${created.id}`, { replace: true });
+      addMutation.mutate(
+        {
+          category: data.category,
+          question: data.question,
+          answer: data.answer,
+          keywords: data.keywords,
+        },
+        {
+          onSuccess: (newRow) => {
+            toast.success("Entry added to knowledge base");
+            navigate(`/realx/${env}/train/kb/${newRow.id}`, { replace: true });
+          },
+          onError: (err: any) => {
+            toast.error(err?.message ?? "Failed to add entry");
+            // Fallback to mock
+            const created = createKbItem(env ?? "dev", { ...data, keywords: kws, sourceUrl: data.sourceUrl }, session!.user.id, session!.user.name);
+            navigate(`/realx/${env}/train/kb/${created.id}`, { replace: true });
+          },
+        }
+      );
     } else {
       updateKbItem(item!.id, { ...data, keywords: kws }, session!.user.id);
       toast.success("KB item updated");
