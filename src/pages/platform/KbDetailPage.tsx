@@ -201,8 +201,16 @@ export default function KbDetailPage() {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm">{editing ? "Edit" : "Details"}</CardTitle>
-                {!editing && canEdit && !isNew && item?.status === "Draft" && (
+                {!editing && canEdit && !isNew && item?.status !== "Archived" && (
                   <Button size="sm" variant="outline" className="text-xs" onClick={() => setEditing(true)}>Edit</Button>
+                )}
+                {!editing && canEdit && !isNew && item?.status !== "Archived" && (
+                  <Button size="sm" variant="destructive" className="text-xs" onClick={() => setShowDeprecateModal(true)}>
+                    Deprecate &amp; Revise
+                  </Button>
+                )}
+                {!editing && !isNew && item?.status === "Archived" && (
+                  <span className="text-xs text-muted-foreground font-medium">Deprecated</span>
                 )}
                 {isSupportAgent && !isNew && (
                   <Button size="sm" variant="outline" className="text-xs" disabled>Suggest Edit</Button>
