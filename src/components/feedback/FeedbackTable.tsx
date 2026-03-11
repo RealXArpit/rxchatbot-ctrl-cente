@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { useFeedbackEvents } from "@/hooks/useFeedback";
+import { useState, useMemo } from "react";
 import { getFeedbackEvents } from "@/lib/mock-feedback";
+import { useFeedbackEvents } from "@/hooks/useFeedback";
 import { useAuth } from "@/contexts/AuthContext";
 import { StatusPill } from "@/components/platform/StatusPill";
 import { Timestamp } from "@/components/platform/Timestamp";
@@ -24,10 +24,12 @@ export function FeedbackTable() {
   const { data: liveEvents, isLoading } = useFeedbackEvents();
   const allEvents = liveEvents && liveEvents.length > 0 ? liveEvents : getFeedbackEvents();
 
-  let events = [...allEvents];
-  if (filter === "positive") events = events.filter((e) => e.feedback === 1);
-  if (filter === "negative") events = events.filter((e) => e.feedback === -1);
-  if (!sortDesc) events = events.reverse();
+  const events = useMemo(() => {
+    let list = [...allEvents];
+    if (filter === "positive") list = list.filter((e) => e.feedback === 1);
+    if (filter === "negative") list = list.filter((e) => e.feedback === -1);
+    return sortDesc ? list : list.reverse();
+  }, [allEvents, filter, sortDesc]);
 
   return (
     <div className="space-y-3">
@@ -49,54 +51,60 @@ export function FeedbackTable() {
 
       {isLoading && <LoadingSkeleton />}
 
-      <div className="rounded-lg border border-border overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="text-xs">Date</TableHead>
-              <TableHead className="text-xs">Session</TableHead>
-              <TableHead className="text-xs">User Message</TableHead>
-              <TableHead className="text-xs">Feedback</TableHead>
-              <TableHead className="text-xs">Confidence</TableHead>
-              <TableHead className="text-xs">Routed To</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {events.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center py-12 text-sm text-muted-foreground">
-                  No feedback collected yet. Users can thumbs up/down answers in the chat widget.
-                </TableCell>
+      {!isLoading && (
+        <div className="rounded-lg border border-border overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="text-xs">Date</TableHead>
+                <TableHead className="text-xs">Session</TableHead>
+                <TableHead className="text-xs">User Message</TableHead>
+                <TableHead className="text-xs">Feedback</TableHead>
+                <TableHead className="text-xs">Confidence</TableHead>
+                <TableHead className="text-xs">Routed To</TableHead>
               </TableRow>
-            ) : (
-              events.map((ev) => (
-                <TableRow key={ev.id}>
-                  <TableCell className="py-2"><Timestamp date={ev.feedbackAt} fmt="d MMM, HH:mm" /></TableCell>
-                  <TableCell className="py-2">
-                    <span className="font-mono text-[10px] text-muted-foreground">
-                      {canSeeSession ? ev.sessionId : ev.sessionId.slice(0, 10) + "…"}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-2 max-w-[200px]">
-                    <span className="text-xs truncate block">{ev.userMessage.slice(0, 60)}{ev.userMessage.length > 60 ? "…" : ""}</span>
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <span className={ev.feedback === 1 ? "text-success text-sm" : "text-destructive text-sm"}>
-                      {ev.feedback === 1 ? "👍" : "👎"}
-                    </span>
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <span className="tabular-nums text-xs">{ev.confidence.toFixed(2)}</span>
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <StatusPill label={ev.routedTo} variant={ev.routedTo === "BOT" ? "primary" : "warning"} />
+            </TableHeader>
+            <TableBody>
+              {events.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-12 text-sm text-muted-foreground">
+                    No feedback collected yet. Users can thumbs up/down answers in the chat widget.
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ) : (
+                events.map((ev) => (
+                  <TableRow key={ev.id}>
+                    <TableCell className="py-2">
+                      <Timestamp date={ev.feedbackAt} fmt="d MMM, HH:mm" />
+                    </TableCell>
+                    <TableCell className="py-2">
+                      <span className="font-mono text-[10px] text-muted-foreground">
+                        {canSeeSession ? ev.sessionId : ev.sessionId.slice(0, 10) + "…"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-2 max-w-[200px]">
+                      <span className="text-xs truncate block">
+                        {ev.userMessage.slice(0, 60)}{ev.userMessage.length > 60 ? "…" : ""}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-2">
+                      <span className={ev.feedback === 1 ? "text-success text-sm" : "text-destructive text-sm"}>
+                        {ev.feedback === 1 ? "👍" : "👎"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-2">
+                      <span className="tabular-nums text-xs">{ev.confidence.toFixed(2)}</span>
+                    </TableCell>
+                    <TableCell className="py-2">
+                      <StatusPill label={ev.routedTo} variant={ev.routedTo === "BOT" ? "primary" : "warning"} />
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   );
 }

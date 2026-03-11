@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import type { FeedbackEvent, FeedbackSummary } from '@/lib/mock-feedback';
+import type { FeedbackEvent, KbFeedbackScore, FeedbackSummary } from '@/lib/mock-feedback';
 
 export function useFeedbackEvents() {
   return useQuery({
@@ -54,6 +54,28 @@ export function useFeedbackSummary() {
         avgConfidenceOnPositive: avgConf,
       };
       return summary;
+    },
+    refetchInterval: 60000,
+  });
+}
+
+export function useKbScores() {
+  return useQuery({
+    queryKey: ['kb_scores'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('knowledge_base')
+        .select('id, question, category, feedback_score, use_count')
+        .eq('status', 'ACTIVE')
+        .order('feedback_score', { ascending: false });
+      if (error) throw error;
+      return (data ?? []).map((row): KbFeedbackScore => ({
+        kbId:          row.id,
+        question:      row.question ?? '',
+        category:      row.category ?? '',
+        feedbackScore: row.feedback_score ?? 0,
+        useCount:      row.use_count ?? 0,
+      }));
     },
     refetchInterval: 60000,
   });
