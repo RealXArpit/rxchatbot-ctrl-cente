@@ -34,7 +34,7 @@ export default function ConversationDetailPage() {
     data: liveMessages,
     isLoading: transcriptLoading,
     error: transcriptError,
-  } = useSessionTranscript(liveSessionId);
+  } = useSessionTranscript(resolvedSessionId);
 
   // Build the conversation header from live data if mock detail not found
   const conversationForHeader = detail?.conversation ?? (liveLogRow ? {
