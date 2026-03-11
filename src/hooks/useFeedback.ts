@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import type { FeedbackEvent, FeedbackSummary } from '@/lib/mock-feedback';
+import type { FeedbackEvent, KbFeedbackScore, FeedbackSummary } from '@/lib/mock-feedback';
 
 export function useFeedbackEvents() {
   return useQuery({
