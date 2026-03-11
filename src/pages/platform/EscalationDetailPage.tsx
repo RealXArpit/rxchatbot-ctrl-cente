@@ -10,6 +10,8 @@ import {
   getEscalationById, assignTicket, addNote, addReply, resolveTicket,
   type EscalationTicket,
 } from "@/lib/mock-escalations";
+import { useEscalationById, useUpdateEscalationStatus } from "@/hooks/useEscalations";
+import { LoadingSkeleton } from "@/components/platform/LoadingSkeleton";
 import { SlaTimer } from "@/components/escalations/SlaTimer";
 import { AssignmentPanel } from "@/components/escalations/AssignmentPanel";
 import { InternalNotes } from "@/components/escalations/InternalNotes";
@@ -38,12 +40,22 @@ export default function EscalationDetailPage() {
   const canReply = CAN_REPLY_ROLES.includes(role as Role);
   const canResolve = canReply;
 
-  const [ticket, setTicket] = useState<EscalationTicket | null>(() => getEscalationById(ticketId ?? ""));
+  // Try live data first, fall back to mock
+  const { data: liveTicket, isLoading: liveLoading } = useEscalationById(ticketId);
+  const updateMutation = useUpdateEscalationStatus();
+
+  const [mockTicket, setMockTicket] = useState<EscalationTicket | null>(() => getEscalationById(ticketId ?? ""));
   const [lastSent, setLastSent] = useState<Date | null>(null);
 
-  const refresh = useCallback(() => {
-    setTicket(getEscalationById(ticketId ?? ""));
+  const ticket = liveTicket ?? mockTicket;
+
+  const refreshMock = useCallback(() => {
+    setMockTicket(getEscalationById(ticketId ?? ""));
   }, [ticketId]);
+
+  if (liveLoading) {
+    return <div className="p-6"><LoadingSkeleton /></div>;
+  }
 
   if (!ticket) {
     return (
@@ -56,35 +68,67 @@ export default function EscalationDetailPage() {
     );
   }
 
+  const isLive = !!liveTicket;
+
   const handleAssign = (assigneeId: string, assigneeName: string) => {
-    assignTicket(ticket.id, assigneeId, assigneeName);
-    refresh();
-    toast.success(`Assigned to ${assigneeName}`);
+    if (isLive) {
+      updateMutation.mutate({ id: ticket.id, assigned_to: assigneeId, status: 'IN_PROGRESS' }, {
+        onSuccess: () => toast.success(`Assigned to ${assigneeName}`),
+        onError: () => toast.error("Failed to assign ticket"),
+      });
+    } else {
+      assignTicket(ticket.id, assigneeId, assigneeName);
+      refreshMock();
+      toast.success(`Assigned to ${assigneeName}`);
+    }
   };
 
   const handleAddNote = (text: string) => {
     addNote(ticket.id, session!.user.id, session!.user.name, text);
-    refresh();
+    refreshMock();
     toast.success("Note added");
   };
 
   const handleReply = (text: string) => {
     addReply(ticket.id, session!.user.id, session!.user.name, text);
-    refresh();
+    refreshMock();
     toast.success("Reply sent");
   };
 
   const handleResolve = (note: string, outcome: string) => {
-    resolveTicket(ticket.id, note, outcome);
-    refresh();
-    toast.success("Ticket resolved");
+    if (isLive) {
+      updateMutation.mutate({
+        id: ticket.id,
+        status: 'RESOLVED',
+        resolution_note: note,
+        outcome,
+        resolved_at: new Date().toISOString(),
+      }, {
+        onSuccess: () => toast.success("Ticket resolved"),
+        onError: () => toast.error("Failed to resolve ticket"),
+      });
+    } else {
+      resolveTicket(ticket.id, note, outcome);
+      refreshMock();
+      toast.success("Ticket resolved");
+    }
   };
 
   const handleAgentSuccess = (op: string) => {
     setLastSent(new Date());
     if (op === "RESOLVE") {
-      resolveTicket(ticket.id, "Resolved via agent intervention", "RESOLVED");
-      refresh();
+      if (isLive) {
+        updateMutation.mutate({
+          id: ticket.id,
+          status: 'RESOLVED',
+          resolution_note: 'Resolved via agent intervention',
+          outcome: 'RESOLVED',
+          resolved_at: new Date().toISOString(),
+        });
+      } else {
+        resolveTicket(ticket.id, "Resolved via agent intervention", "RESOLVED");
+        refreshMock();
+      }
     }
   };
 
