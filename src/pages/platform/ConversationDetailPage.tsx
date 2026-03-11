@@ -62,7 +62,7 @@ export default function ConversationDetailPage() {
     adminReferenceAnswer: null,
   } : null);
 
-  if (!detail && !liveLogRow) {
+  if (!conversationForHeader) {
     return <Navigate to={`/realx/${env}/chat-logs`} replace />;
   }
 
