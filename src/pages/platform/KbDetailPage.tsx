@@ -79,6 +79,14 @@ export default function KbDetailPage() {
   const [mockItem, setMockItem] = useState<KnowledgeBaseItem | null>(() => isNew ? null : getKbById(kbId ?? ""));
   const item = liveItem ?? mockItem;
 
+  const searchParams = new URLSearchParams(window.location.search);
+  const prefillData = isNew ? {
+    category: searchParams.get("prefill_category") ?? "",
+    question: searchParams.get("prefill_question") ?? "",
+    answer: searchParams.get("prefill_answer") ?? "",
+    keywords: searchParams.get("prefill_keywords") ?? "",
+    sourceUrl: "",
+  } : undefined;
   const [editing, setEditing] = useState(isNew);
 
   const refresh = useCallback(() => {
