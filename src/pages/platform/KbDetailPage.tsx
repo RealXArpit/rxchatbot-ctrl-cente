@@ -34,7 +34,15 @@ function mapLiveRow(row: any): KnowledgeBaseItem {
         : [],
     sourceUrl: row.source_url ?? "",
     lastUpdated: row.updated_at ?? row.created_at ?? "",
-    status: row.status ?? "Draft",
+    status: (() => {
+      const s = (row.status ?? "").toUpperCase();
+      if (s === "DEPRECATED" || s === "ARCHIVED") return "Archived";
+      if (s === "APPROVED") return "Approved";
+      if (s === "PUBLISHED") return "Published";
+      if (s === "PROPOSED") return "Proposed";
+      if (s === "ACTIVE") return "Approved";
+      return "Draft";
+    })(),
     createdAt: row.created_at ?? "",
     updatedAt: row.updated_at ?? "",
     versions: [],
