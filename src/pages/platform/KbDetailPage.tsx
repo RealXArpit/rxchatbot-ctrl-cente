@@ -193,7 +193,27 @@ export default function KbDetailPage() {
     answer: item.answer,
     keywords: item.keywords.join(", "),
     sourceUrl: item.sourceUrl,
-  } : undefined;
+  } : prefillData;
+
+  const handleDeprecateAndRevise = async () => {
+    if (!item) return;
+    deprecateMutation.mutate(item.id, {
+      onSuccess: () => {
+        toast.success("Entry deprecated. Creating revised version...");
+        setShowDeprecateModal(false);
+        const params = new URLSearchParams({
+          prefill_category: item.category,
+          prefill_question: item.question,
+          prefill_answer: item.answer,
+          prefill_keywords: item.keywords.join(", "),
+        });
+        navigate(`/realx/${env}/train/kb/new?${params.toString()}`);
+      },
+      onError: () => {
+        toast.error("Failed to deprecate entry. Please try again.");
+      },
+    });
+  };
 
   return (
     <div>
