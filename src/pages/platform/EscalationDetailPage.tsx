@@ -40,20 +40,17 @@ export default function EscalationDetailPage() {
   const canReply = CAN_REPLY_ROLES.includes(role as Role);
   const canResolve = canReply;
 
-  // Try live data first, fall back to mock
-  const { data: liveTicket, isLoading: liveLoading } = useEscalationById(ticketId);
-  const updateMutation = useUpdateEscalationStatus();
-
-  const [mockTicket, setMockTicket] = useState<EscalationTicket | null>(() => getEscalationById(ticketId ?? ""));
+  const { data: liveTicket, isLoading: ticketLoading, refetch } = useEscalationById(ticketId);
+  const updateStatus = useUpdateEscalationStatus();
+  const [mockTicket] = useState<EscalationTicket | null>(() => getEscalationById(ticketId ?? ""));
+  const ticket = liveTicket ?? mockTicket;
   const [lastSent, setLastSent] = useState<Date | null>(null);
 
-  const ticket = liveTicket ?? mockTicket;
+  const refresh = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
-  const refreshMock = useCallback(() => {
-    setMockTicket(getEscalationById(ticketId ?? ""));
-  }, [ticketId]);
-
-  if (liveLoading) {
+  if (ticketLoading && !ticket) {
     return <div className="p-6"><LoadingSkeleton /></div>;
   }
 
@@ -68,48 +65,52 @@ export default function EscalationDetailPage() {
     );
   }
 
-  const isLive = !!liveTicket;
-
   const handleAssign = (assigneeId: string, assigneeName: string) => {
-    if (isLive) {
-      updateMutation.mutate({ id: ticket.id, assigned_to: assigneeId, status: 'IN_PROGRESS' }, {
-        onSuccess: () => toast.success(`Assigned to ${assigneeName}`),
-        onError: () => toast.error("Failed to assign ticket"),
-      });
+    if (liveTicket) {
+      updateStatus.mutate(
+        { id: ticket.id, assigned_to: assigneeId, status: 'IN_PROGRESS' },
+        {
+          onSuccess: () => { refresh(); toast.success(`Assigned to ${assigneeName}`); },
+          onError: () => toast.error("Failed to assign"),
+        }
+      );
     } else {
       assignTicket(ticket.id, assigneeId, assigneeName);
-      refreshMock();
+      refresh();
       toast.success(`Assigned to ${assigneeName}`);
     }
   };
 
   const handleAddNote = (text: string) => {
     addNote(ticket.id, session!.user.id, session!.user.name, text);
-    refreshMock();
+    refresh();
     toast.success("Note added");
   };
 
   const handleReply = (text: string) => {
     addReply(ticket.id, session!.user.id, session!.user.name, text);
-    refreshMock();
+    refresh();
     toast.success("Reply sent");
   };
 
   const handleResolve = (note: string, outcome: string) => {
-    if (isLive) {
-      updateMutation.mutate({
-        id: ticket.id,
-        status: 'RESOLVED',
-        resolution_note: note,
-        outcome,
-        resolved_at: new Date().toISOString(),
-      }, {
-        onSuccess: () => toast.success("Ticket resolved"),
-        onError: () => toast.error("Failed to resolve ticket"),
-      });
+    if (liveTicket) {
+      updateStatus.mutate(
+        {
+          id: ticket.id,
+          status: 'RESOLVED',
+          resolution_note: note,
+          outcome,
+          resolved_at: new Date().toISOString(),
+        },
+        {
+          onSuccess: () => { refresh(); toast.success("Ticket resolved"); },
+          onError: () => toast.error("Failed to resolve"),
+        }
+      );
     } else {
       resolveTicket(ticket.id, note, outcome);
-      refreshMock();
+      refresh();
       toast.success("Ticket resolved");
     }
   };
@@ -117,18 +118,7 @@ export default function EscalationDetailPage() {
   const handleAgentSuccess = (op: string) => {
     setLastSent(new Date());
     if (op === "RESOLVE") {
-      if (isLive) {
-        updateMutation.mutate({
-          id: ticket.id,
-          status: 'RESOLVED',
-          resolution_note: 'Resolved via agent intervention',
-          outcome: 'RESOLVED',
-          resolved_at: new Date().toISOString(),
-        });
-      } else {
-        resolveTicket(ticket.id, "Resolved via agent intervention", "RESOLVED");
-        refreshMock();
-      }
+      handleResolve("Resolved via agent intervention", "RESOLVED");
     }
   };
 
@@ -147,7 +137,6 @@ export default function EscalationDetailPage() {
       </div>
 
       <div className="px-6 py-4 grid gap-4 lg:grid-cols-3">
-        {/* Left: Details */}
         <div className="lg:col-span-1 space-y-4">
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm">Details</CardTitle></CardHeader>
@@ -188,7 +177,6 @@ export default function EscalationDetailPage() {
           </div>
         </div>
 
-        {/* Right: Takeover + Agent Reply + Notes + Resolution */}
         <div className="lg:col-span-2 space-y-4">
           <TakeoverShell
             replies={ticket.replies}
@@ -198,10 +186,8 @@ export default function EscalationDetailPage() {
             ticketId={ticket.id}
           />
 
-          {/* Agent Poll Banner */}
           {lastSent && <AgentPollBanner sessionId={ticket.sessionId} sentAt={lastSent} />}
 
-          {/* Agent Reply Form — only for allowed roles */}
           {canReply && ticket.status !== "RESOLVED" && ticket.status !== "CLOSED" && (
             <AgentReplyForm
               ticketId={ticket.id}
