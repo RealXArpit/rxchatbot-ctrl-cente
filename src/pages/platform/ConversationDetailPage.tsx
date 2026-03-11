@@ -25,7 +25,10 @@ export default function ConversationDetailPage() {
   // Try to find the real sessionId from live chat_logs data
   const { data: chatLogsData } = useChatLogs();
   const liveLogRow = chatLogsData?.find((r: any) => r.id === conversationId);
-  const liveSessionId = liveLogRow?.session_id ?? detail?.conversation?.sessionId ?? conversationId;
+  const resolvedSessionId =
+    liveLogRow?.session_id ??
+    detail?.conversation?.sessionId ??
+    null;
 
   const {
     data: liveMessages,
