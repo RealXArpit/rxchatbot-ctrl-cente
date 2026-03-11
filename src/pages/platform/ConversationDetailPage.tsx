@@ -95,7 +95,7 @@ export default function ConversationDetailPage() {
             if (messages.length === 0) {
               return (
                 <p className="text-sm text-muted-foreground">
-                  No transcript available for this session.
+                  No transcript recorded for this session yet.
                 </p>
               );
             }
