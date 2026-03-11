@@ -4,71 +4,49 @@ import type { EscalationTicket, Priority, TicketStatus, SlaPolicy } from '@/lib/
 
 const SLA_MAP: Record<string, SlaPolicy> = {
   HIGH:     { firstResponseMinutes: 5,  resolutionHours: 2  },
-  STANDARD: { firstResponseMinutes: 15, resolutionHours: 6  },
-  MEDIA:    { firstResponseMinutes: 60, resolutionHours: 24 },
-  DEFAULT:  { firstResponseMinutes: 60, resolutionHours: 24 },
+  STANDARD: { firstResponseMinutes: 60, resolutionHours: 24 },
+  MEDIA:    { firstResponseMinutes: 30, resolutionHours: 8  },
 };
 
-function mapPriority(p: string | null): Priority {
-  if (p === 'HIGH')     return 'P0';
-  if (p === 'STANDARD') return 'P1';
-  if (p === 'MEDIA')    return 'P2';
-  return 'P2';
-}
-
-function mapStatus(s: string | null): TicketStatus {
-  if (s === 'RESOLVED') return 'RESOLVED';
-  if (s === 'CLOSED')   return 'CLOSED';
-  if (s === 'IN_PROGRESS' || s === 'ASSIGNED') return 'IN_PROGRESS';
-  return 'OPEN';
-}
-
 function mapRow(row: any): EscalationTicket {
-  const priority = mapPriority(row.escalation_priority);
-  const sla = SLA_MAP[row.escalation_priority ?? 'DEFAULT'] ?? SLA_MAP.DEFAULT;
+  const priority: Priority =
+    row.priority === 'HIGH' ? 'P0' :
+    row.priority === 'STANDARD' ? 'P1' : 'P2';
+
+  const sla = SLA_MAP[row.priority] ?? SLA_MAP['STANDARD'];
+
   return {
-    id:                row.id ?? '',
-    tenantId:          'realx',
-    env:               'prod',
+    id:               row.id ?? '',
+    tenantId:         'realx',
+    env:              'prod',
     priority,
-    status:            mapStatus(row.status),
-    channel:           row.channel ?? 'WEBSITE',
-    conversationId:    row.id ?? '',
-    sessionId:         row.session_id ?? '',
-    escalatedAt:       row.created_at ?? new Date().toISOString(),
-    firstAgentReplyAt: row.agent_reply ? row.created_at : null,
-    resolvedAt:        row.resolved_at ?? null,
-    assigneeId:        row.assigned_to ?? null,
-    assigneeName:      row.assigned_to ?? null,
-    reason:            (row.escalation_reason ?? 'LOW_CONFIDENCE') as any,
+    status:           (row.status ?? 'OPEN') as TicketStatus,
+    channel:          row.channel ?? 'WEBSITE',
+    conversationId:   row.id ?? '',
+    sessionId:        row.session_id ?? '',
+    escalatedAt:      row.created_at ?? new Date().toISOString(),
+    firstAgentReplyAt: row.first_agent_reply_at ?? null,
+    resolvedAt:       row.resolved_at ?? null,
+    assigneeId:       row.assigned_to ?? null,
+    assigneeName:     row.assigned_to ?? null,
+    reason:           (row.escalation_reason ?? 'LOW_CONFIDENCE') as any,
     sla,
-    resolutionNote:    row.resolution_note ?? null,
-    outcome:           row.outcome ?? null,
-    notes:             [],
-    replies:           row.agent_reply
-      ? [{ id: `r_${row.id}`, ticketId: row.id, authorId: row.assigned_to ?? 'agent',
-           authorName: 'Agent', text: row.agent_reply, createdAt: row.resolved_at ?? row.created_at }]
-      : [],
+    resolutionNote:   row.resolution_note ?? null,
+    outcome:          row.outcome ?? null,
+    notes:            [],
+    replies:          [],
   };
 }
 
-export function useEscalations(queue: 'unassigned' | 'mine' | 'all', userId: string) {
+export function useEscalations() {
   return useQuery({
-    queryKey: ['escalations', queue, userId],
+    queryKey: ['escalations'],
     queryFn: async () => {
-      let q = supabase
+      const { data, error } = await supabase
         .from('escalations')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(200);
-
-      if (queue === 'unassigned') {
-        q = q.is('assigned_to', null).not('status', 'in', '("RESOLVED","CLOSED")');
-      } else if (queue === 'mine') {
-        q = q.eq('assigned_to', userId);
-      }
-
-      const { data, error } = await q;
       if (error) throw error;
       return (data ?? []).map(mapRow);
     },
@@ -76,18 +54,19 @@ export function useEscalations(queue: 'unassigned' | 'mine' | 'all', userId: str
   });
 }
 
-export function useEscalationById(ticketId: string | undefined) {
+export function useEscalationById(id: string | undefined) {
   return useQuery({
-    queryKey: ['escalation', ticketId],
-    enabled: !!ticketId,
+    queryKey: ['escalation', id],
+    enabled: !!id,
     queryFn: async () => {
+      if (!id) return null;
       const { data, error } = await supabase
         .from('escalations')
         .select('*')
-        .eq('id', ticketId!)
+        .eq('id', id)
         .single();
       if (error) throw error;
-      return mapRow(data);
+      return data ? mapRow(data) : null;
     },
     refetchInterval: 15000,
   });
@@ -99,7 +78,7 @@ export function useUpdateEscalationStatus() {
     mutationFn: async (payload: {
       id: string;
       status?: string;
-      assigned_to?: string | null;
+      assigned_to?: string;
       resolution_note?: string;
       outcome?: string;
       resolved_at?: string;
@@ -111,9 +90,9 @@ export function useUpdateEscalationStatus() {
         .eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['escalations'] });
-      queryClient.invalidateQueries({ queryKey: ['escalation'] });
+      queryClient.invalidateQueries({ queryKey: ['escalation', variables.id] });
     },
   });
 }
