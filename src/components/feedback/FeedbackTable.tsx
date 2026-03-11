@@ -1,16 +1,17 @@
-import { useState, useMemo } from "react";
-import { getFeedbackEvents, type FeedbackEvent } from "@/lib/mock-feedback";
+import { useState } from "react";
+import { useFeedbackEvents } from "@/hooks/useFeedback";
+import { getFeedbackEvents } from "@/lib/mock-feedback";
 import { useAuth } from "@/contexts/AuthContext";
 import { StatusPill } from "@/components/platform/StatusPill";
 import { Timestamp } from "@/components/platform/Timestamp";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LoadingSkeleton } from "@/components/platform/LoadingSkeleton";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import type { Role } from "@/lib/mock-api";
 
 const CAN_SEE_FULL_SESSION: Role[] = ["SuperAdmin", "OpsManager"];
-
 type Filter = "all" | "positive" | "negative";
 
 export function FeedbackTable() {
@@ -20,12 +21,13 @@ export function FeedbackTable() {
   const [filter, setFilter] = useState<Filter>("all");
   const [sortDesc, setSortDesc] = useState(true);
 
-  const events = useMemo(() => {
-    let list = getFeedbackEvents();
-    if (filter === "positive") list = list.filter((e) => e.feedback === 1);
-    if (filter === "negative") list = list.filter((e) => e.feedback === -1);
-    return sortDesc ? list : [...list].reverse();
-  }, [filter, sortDesc]);
+  const { data: liveEvents, isLoading } = useFeedbackEvents();
+  const allEvents = liveEvents && liveEvents.length > 0 ? liveEvents : getFeedbackEvents();
+
+  let events = [...allEvents];
+  if (filter === "positive") events = events.filter((e) => e.feedback === 1);
+  if (filter === "negative") events = events.filter((e) => e.feedback === -1);
+  if (!sortDesc) events = events.reverse();
 
   return (
     <div className="space-y-3">
@@ -45,6 +47,8 @@ export function FeedbackTable() {
         </button>
       </div>
 
+      {isLoading && <LoadingSkeleton />}
+
       <div className="rounded-lg border border-border overflow-x-auto">
         <Table>
           <TableHeader>
@@ -61,7 +65,7 @@ export function FeedbackTable() {
             {events.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-12 text-sm text-muted-foreground">
-                  No feedback collected yet. Share the chat with users to start collecting.
+                  No feedback collected yet. Users can thumbs up/down answers in the chat widget.
                 </TableCell>
               </TableRow>
             ) : (
