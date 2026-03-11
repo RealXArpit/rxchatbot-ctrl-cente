@@ -43,3 +43,36 @@ export function useUpdateKbItem() {
     },
   });
 }
+
+export function useAddKbItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (item: {
+      category: string;
+      question: string;
+      answer: string;
+      keywords: string;
+    }) => {
+      const { data, error } = await supabase
+        .from('knowledge_base')
+        .insert({
+          category: item.category,
+          question: item.question,
+          answer: item.answer,
+          keywords: item.keywords,
+          status: 'ACTIVE',
+          feedback_score: 0,
+          use_count: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['knowledge_base'] });
+    },
+  });
+}
