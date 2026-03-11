@@ -49,7 +49,7 @@ export default function ConversationDetailPage() {
     routedTo: liveLogRow.routed_to ?? 'BOT',
     confidence: liveLogRow.confidence ?? 0,
     cacheHit: liveLogRow.cache_hit ?? false,
-    citations: liveLogRow.citations ?? [],
+    citations: Array.isArray(liveLogRow.citations) ? liveLogRow.citations : [],
     escalationReason: liveLogRow.escalation_reason ?? null,
     legalHold: false,
     logId: liveLogRow.id ?? '',
