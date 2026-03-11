@@ -9,6 +9,9 @@ import { ConversationDetailHeader } from "@/components/chat-logs/ConversationDet
 import { TranscriptThread } from "@/components/chat-logs/TranscriptThread";
 import { PiiToggle } from "@/components/chat-logs/PiiToggle";
 import { Separator } from "@/components/ui/separator";
+import { useSessionTranscript } from "@/hooks/useSessionTranscript";
+import { LoadingSkeleton } from "@/components/platform/LoadingSkeleton";
+import { useChatLogs } from "@/hooks/useChatLogs";
 
 export default function ConversationDetailPage() {
   const { conversationId, env } = useParams<{ conversationId: string; env: string }>();
@@ -19,7 +22,44 @@ export default function ConversationDetailPage() {
 
   const detail = getConversationDetail(tenantEnv, conversationId ?? "");
 
-  if (!detail) {
+  // Try to find the real sessionId from live chat_logs data
+  const { data: chatLogsData } = useChatLogs();
+  const liveLogRow = chatLogsData?.find((r: any) => r.id === conversationId);
+  const liveSessionId = liveLogRow?.session_id ?? detail?.conversation?.sessionId ?? conversationId;
+
+  const {
+    data: liveMessages,
+    isLoading: transcriptLoading,
+    error: transcriptError,
+  } = useSessionTranscript(liveSessionId);
+
+  // Build the conversation header from live data if mock detail not found
+  const conversationForHeader = detail?.conversation ?? (liveLogRow ? {
+    id: liveLogRow.id ?? conversationId ?? '',
+    tenantId: 'realx',
+    env: tenantEnv,
+    channel: liveLogRow.channel ?? 'WEBSITE',
+    sessionId: liveLogRow.session_id ?? '',
+    userIdHash: liveLogRow.user_id ?? '',
+    startedAt: liveLogRow.timestamp ?? '',
+    endedAt: null,
+    routedTo: liveLogRow.routed_to ?? 'BOT',
+    confidence: liveLogRow.confidence ?? 0,
+    cacheHit: liveLogRow.cache_hit ?? false,
+    citations: liveLogRow.citations ?? [],
+    escalationReason: liveLogRow.escalation_reason ?? null,
+    legalHold: false,
+    logId: liveLogRow.id ?? '',
+    tokensUsed: liveLogRow.tokens_used ?? 0,
+    correlationId: liveLogRow.id ?? '',
+    escalationPriority: null,
+    sentiment: liveLogRow.sentiment ?? 'neutral',
+    intent: liveLogRow.intent ?? 'FAQ',
+    feedback: liveLogRow.feedback ?? null,
+    adminReferenceAnswer: null,
+  } : null);
+
+  if (!detail && !liveLogRow) {
     return <Navigate to={`/realx/${env}/chat-logs`} replace />;
   }
 
@@ -27,8 +67,8 @@ export default function ConversationDetailPage() {
     <RequireRole allowedRoles={routeMetadata["chat-logs"].allowedRoles}>
       <div className="space-y-4 max-w-4xl">
         <ConversationDetailHeader
-          conversation={detail.conversation}
-          cacheEntry={detail.cacheEntry}
+          conversation={conversationForHeader!}
+          cacheEntry={detail?.cacheEntry ?? null}
         />
 
         <Separator />
@@ -39,7 +79,25 @@ export default function ConversationDetailPage() {
         </div>
 
         <div className="rounded-lg border border-border bg-card p-4">
-          <TranscriptThread messages={detail.messages} showRaw={showRaw} />
+          {transcriptLoading && <LoadingSkeleton />}
+          {!transcriptLoading && transcriptError && (
+            <p className="text-sm text-muted-foreground">
+              Could not load transcript. Showing summary only.
+            </p>
+          )}
+          {!transcriptLoading && !transcriptError && (() => {
+            const messages = (liveMessages && liveMessages.length > 0)
+              ? liveMessages
+              : (detail?.messages ?? []);
+            if (messages.length === 0) {
+              return (
+                <p className="text-sm text-muted-foreground">
+                  No transcript available for this session.
+                </p>
+              );
+            }
+            return <TranscriptThread messages={messages} showRaw={showRaw} />;
+          })()}
         </div>
       </div>
     </RequireRole>
