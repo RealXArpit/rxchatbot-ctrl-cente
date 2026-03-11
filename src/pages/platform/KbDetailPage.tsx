@@ -15,7 +15,7 @@ import { Link } from "react-router-dom";
 import type { Role } from "@/lib/mock-api";
 import { LoadingSkeleton } from "@/components/platform/LoadingSkeleton";
 import { ErrorPanel } from "@/components/platform/ErrorPanel";
-import { useKbItems, useUpdateKbItem } from "@/hooks/useKbItems";
+import { useKbItems, useUpdateKbItem, useAddKbItem } from "@/hooks/useKbItems";
 
 const ADMIN_PANEL_ROLES: Role[] = ["KnowledgeManager", "OpsManager", "SuperAdmin"];
 
