@@ -25,13 +25,16 @@ export default function ConversationDetailPage() {
   // Try to find the real sessionId from live chat_logs data
   const { data: chatLogsData } = useChatLogs();
   const liveLogRow = chatLogsData?.find((r: any) => r.id === conversationId);
-  const liveSessionId = liveLogRow?.session_id ?? detail?.conversation?.sessionId ?? conversationId;
+  const resolvedSessionId =
+    liveLogRow?.session_id ??
+    detail?.conversation?.sessionId ??
+    null;
 
   const {
     data: liveMessages,
     isLoading: transcriptLoading,
     error: transcriptError,
-  } = useSessionTranscript(liveSessionId);
+  } = useSessionTranscript(resolvedSessionId);
 
   // Build the conversation header from live data if mock detail not found
   const conversationForHeader = detail?.conversation ?? (liveLogRow ? {
@@ -46,7 +49,7 @@ export default function ConversationDetailPage() {
     routedTo: liveLogRow.routed_to ?? 'BOT',
     confidence: liveLogRow.confidence ?? 0,
     cacheHit: liveLogRow.cache_hit ?? false,
-    citations: liveLogRow.citations ?? [],
+    citations: Array.isArray(liveLogRow.citations) ? liveLogRow.citations : [],
     escalationReason: liveLogRow.escalation_reason ?? null,
     legalHold: false,
     logId: liveLogRow.id ?? '',
@@ -59,7 +62,7 @@ export default function ConversationDetailPage() {
     adminReferenceAnswer: null,
   } : null);
 
-  if (!detail && !liveLogRow) {
+  if (!conversationForHeader) {
     return <Navigate to={`/realx/${env}/chat-logs`} replace />;
   }
 
@@ -82,7 +85,7 @@ export default function ConversationDetailPage() {
           {transcriptLoading && <LoadingSkeleton />}
           {!transcriptLoading && transcriptError && (
             <p className="text-sm text-muted-foreground">
-              Could not load transcript. Showing summary only.
+              Could not load transcript from database.
             </p>
           )}
           {!transcriptLoading && !transcriptError && (() => {
@@ -92,7 +95,7 @@ export default function ConversationDetailPage() {
             if (messages.length === 0) {
               return (
                 <p className="text-sm text-muted-foreground">
-                  No transcript available for this session.
+                  No transcript recorded for this session yet.
                 </p>
               );
             }
