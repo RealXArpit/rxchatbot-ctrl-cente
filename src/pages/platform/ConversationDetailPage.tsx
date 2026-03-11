@@ -85,7 +85,7 @@ export default function ConversationDetailPage() {
           {transcriptLoading && <LoadingSkeleton />}
           {!transcriptLoading && transcriptError && (
             <p className="text-sm text-muted-foreground">
-              Could not load transcript. Showing summary only.
+              Could not load transcript from database.
             </p>
           )}
           {!transcriptLoading && !transcriptError && (() => {
