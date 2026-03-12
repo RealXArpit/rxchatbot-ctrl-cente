@@ -51,6 +51,14 @@ export default function TrainPage() {
 
   const [tab, setTab] = useState("kb");
   const [filters, setFilters] = useState<KbFilterState>({ q: "", status: "", category: "" });
+  const [kbView, setKbView] = useState<"list" | "cards">(() => {
+    return (localStorage.getItem("rxchat_kb_view") as "list" | "cards") ?? "list";
+  });
+
+  const handleKbViewChange = (v: "list" | "cards") => {
+    setKbView(v);
+    localStorage.setItem("rxchat_kb_view", v);
+  };
 
   const { data: liveData, isLoading, error, refetch } = useKbItems();
 
