@@ -100,3 +100,11 @@
     font-feature-settings: "tnum";
   }
 }
+
+@keyframes pulse-scale {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+.animate-pulse-scale {
+  animation: pulse-scale 150ms ease-in-out;
+}

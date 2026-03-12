@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Plus, FlaskConical, FileText } from "lucide-react";
+import { Plus, FlaskConical, FileText, LayoutList, LayoutGrid } from "lucide-react";
 import { PageHeader } from "@/components/platform/PageHeader";
 import { useAuth } from "@/contexts/AuthContext";
 import { getKbItems, type KbFilters, type KnowledgeBaseItem } from "@/lib/mock-kb";
