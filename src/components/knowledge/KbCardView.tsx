@@ -170,9 +170,11 @@ export function KbCardView({ items, onClearFilters }: Props) {
       category: item.category,
       question: item.question,
       answer: item.answer,
-      keywords: item.keywords.join(", "),
+      keywords: Array.isArray(item.keywords)
+        ? item.keywords.join(", ")
+        : (item.keywords ?? ""),
     };
-    setEditSnapshot(snap);
+    setEditSnapshot({ ...snap });
     setEditState({ ...snap });
     setIsEditing(true);
     setErrors({});
