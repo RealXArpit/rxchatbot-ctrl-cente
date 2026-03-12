@@ -398,11 +398,11 @@ export function KbCardView({ items, onClearFilters }: Props) {
             <div className="flex items-center justify-between flex-wrap gap-2">
               <span className="text-[11px] text-muted-foreground tabular-nums">Updated {item.lastUpdated}</span>
               <div className="flex gap-2">
-                <Button size="sm" variant="ghost" className="text-xs h-7 gap-1" onClick={handleViewDetails}>
+                <Button size="sm" variant="ghost" className="text-xs h-7 gap-1" type="button" onPointerDown={e => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); if (isEditing) { setPendingNav(-1); setShowUnsavedPrompt(true); return; } navigate(`/realx/${env}/train/kb/${item.id}`); }}>
                   <ExternalLink className="h-3 w-3" /> View details
                 </Button>
                 {canEdit && (
-                  <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={enterEdit}>
+                  <Button size="sm" variant="outline" className="text-xs h-7 gap-1" type="button" onPointerDown={e => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); enterEdit(); }}>
                     <Pencil className="h-3 w-3" /> Edit
                   </Button>
                 )}
