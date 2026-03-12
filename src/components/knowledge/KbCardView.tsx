@@ -130,6 +130,10 @@ export function KbCardView({ items, onClearFilters }: Props) {
 
   // Touch/pointer swipe
   const onPointerDown = (e: React.PointerEvent) => {
+    const tag = (e.target as HTMLElement).tagName.toLowerCase();
+    const isInteractive = ["button", "input", "textarea", "select", "a"].includes(tag);
+    const isInsideInteractive = !!(e.target as HTMLElement).closest("button, input, textarea, select, a, [role='button'], [role='combobox']");
+    if (isInteractive || isInsideInteractive) return;
     if (isEditing) return;
     dragStartX.current = e.clientX;
     currentTranslate.current = 0;
