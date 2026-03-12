@@ -2,7 +2,7 @@ import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Plus, FlaskConical, FileText } from "lucide-react";
+import { Plus, FlaskConical, FileText, LayoutList, LayoutGrid } from "lucide-react";
 import { PageHeader } from "@/components/platform/PageHeader";
 import { useAuth } from "@/contexts/AuthContext";
 import { getKbItems, type KbFilters, type KnowledgeBaseItem } from "@/lib/mock-kb";
@@ -12,6 +12,7 @@ import { TestbenchPanel } from "@/components/knowledge/TestbenchPanel";
 import { LoadingSkeleton } from "@/components/platform/LoadingSkeleton";
 import { ErrorPanel } from "@/components/platform/ErrorPanel";
 import { useKbItems } from "@/hooks/useKbItems";
+import { KbCardView } from "@/components/knowledge/KbCardView";
 
 function mapLiveRow(row: any): KnowledgeBaseItem {
   return {
@@ -50,6 +51,14 @@ export default function TrainPage() {
 
   const [tab, setTab] = useState("kb");
   const [filters, setFilters] = useState<KbFilterState>({ q: "", status: "", category: "" });
+  const [kbView, setKbView] = useState<"list" | "cards">(() => {
+    return (localStorage.getItem("rxchat_kb_view") as "list" | "cards") ?? "list";
+  });
+
+  const handleKbViewChange = (v: "list" | "cards") => {
+    setKbView(v);
+    localStorage.setItem("rxchat_kb_view", v);
+  };
 
   const { data: liveData, isLoading, error, refetch } = useKbItems();
 
@@ -101,16 +110,41 @@ export default function TrainPage() {
               <TabsTrigger value="testbench"><FlaskConical className="h-3.5 w-3.5 mr-1" />Testbench</TabsTrigger>
               <TabsTrigger value="prompts"><FileText className="h-3.5 w-3.5 mr-1" />Prompts</TabsTrigger>
             </TabsList>
-            {tab === "kb" && canCreate && (
-              <Button size="sm" className="gap-1.5 text-xs" onClick={() => navigate(`/realx/${env}/train/kb/new`)}>
-                <Plus className="h-3.5 w-3.5" /> New Item
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {tab === "kb" && (
+                <div className="flex rounded-md border border-border overflow-hidden">
+                  <button
+                    onClick={() => handleKbViewChange("list")}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs transition-colors ${kbView === "list" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <LayoutList className="h-3.5 w-3.5" /> List
+                  </button>
+                  <button
+                    onClick={() => handleKbViewChange("cards")}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs transition-colors ${kbView === "cards" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <LayoutGrid className="h-3.5 w-3.5" /> Cards
+                  </button>
+                </div>
+              )}
+              {tab === "kb" && canCreate && (
+                <Button size="sm" className="gap-1.5 text-xs" onClick={() => navigate(`/realx/${env}/train/kb/new`)}>
+                  <Plus className="h-3.5 w-3.5" /> New Item
+                </Button>
+              )}
+            </div>
           </div>
 
           <TabsContent value="kb" className="space-y-3">
             <KbFiltersBar filters={filters} onChange={setFilters} />
-            <KbTable items={items} isAuditor={isAuditor} />
+            {kbView === "list" ? (
+              <KbTable items={items} isAuditor={isAuditor} />
+            ) : (
+              <KbCardView
+                items={items}
+                onClearFilters={() => setFilters({ q: "", status: "", category: "" })}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="testbench">
