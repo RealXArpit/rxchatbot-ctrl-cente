@@ -110,16 +110,41 @@ export default function TrainPage() {
               <TabsTrigger value="testbench"><FlaskConical className="h-3.5 w-3.5 mr-1" />Testbench</TabsTrigger>
               <TabsTrigger value="prompts"><FileText className="h-3.5 w-3.5 mr-1" />Prompts</TabsTrigger>
             </TabsList>
-            {tab === "kb" && canCreate && (
-              <Button size="sm" className="gap-1.5 text-xs" onClick={() => navigate(`/realx/${env}/train/kb/new`)}>
-                <Plus className="h-3.5 w-3.5" /> New Item
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {tab === "kb" && (
+                <div className="flex rounded-md border border-border overflow-hidden">
+                  <button
+                    onClick={() => handleKbViewChange("list")}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs transition-colors ${kbView === "list" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <LayoutList className="h-3.5 w-3.5" /> List
+                  </button>
+                  <button
+                    onClick={() => handleKbViewChange("cards")}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs transition-colors ${kbView === "cards" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
+                  >
+                    <LayoutGrid className="h-3.5 w-3.5" /> Cards
+                  </button>
+                </div>
+              )}
+              {tab === "kb" && canCreate && (
+                <Button size="sm" className="gap-1.5 text-xs" onClick={() => navigate(`/realx/${env}/train/kb/new`)}>
+                  <Plus className="h-3.5 w-3.5" /> New Item
+                </Button>
+              )}
+            </div>
           </div>
 
           <TabsContent value="kb" className="space-y-3">
             <KbFiltersBar filters={filters} onChange={setFilters} />
-            <KbTable items={items} isAuditor={isAuditor} />
+            {kbView === "list" ? (
+              <KbTable items={items} isAuditor={isAuditor} />
+            ) : (
+              <KbCardView
+                items={items}
+                onClearFilters={() => setFilters({ q: "", status: "", category: "" })}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="testbench">
