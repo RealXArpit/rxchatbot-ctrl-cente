@@ -130,6 +130,10 @@ export function KbCardView({ items, onClearFilters }: Props) {
 
   // Touch/pointer swipe
   const onPointerDown = (e: React.PointerEvent) => {
+    const tag = (e.target as HTMLElement).tagName.toLowerCase();
+    const isInteractive = ["button", "input", "textarea", "select", "a"].includes(tag);
+    const isInsideInteractive = !!(e.target as HTMLElement).closest("button, input, textarea, select, a, [role='button'], [role='combobox']");
+    if (isInteractive || isInsideInteractive) return;
     if (isEditing) return;
     dragStartX.current = e.clientX;
     currentTranslate.current = 0;
@@ -166,9 +170,11 @@ export function KbCardView({ items, onClearFilters }: Props) {
       category: item.category,
       question: item.question,
       answer: item.answer,
-      keywords: item.keywords.join(", "),
+      keywords: Array.isArray(item.keywords)
+        ? item.keywords.join(", ")
+        : (item.keywords ?? ""),
     };
-    setEditSnapshot(snap);
+    setEditSnapshot({ ...snap });
     setEditState({ ...snap });
     setIsEditing(true);
     setErrors({});
@@ -321,8 +327,10 @@ export function KbCardView({ items, onClearFilters }: Props) {
               </p>
               {isLong && (
                 <button
+                  type="button"
                   className="text-xs text-primary mt-1 hover:underline"
-                  onClick={e => { e.stopPropagation(); setExpanded(p => !p); }}
+                  onPointerDown={e => e.stopPropagation()}
+                  onClick={e => { e.stopPropagation(); setExpanded(prev => !prev); }}
                 >
                   {expanded ? "Show less ↑" : "Read more ↓"}
                 </button>
@@ -352,7 +360,9 @@ export function KbCardView({ items, onClearFilters }: Props) {
                 ))}
                 {extraCount > 0 && (
                   <button
+                    type="button"
                     className="text-[11px] text-primary hover:underline"
+                    onPointerDown={e => e.stopPropagation()}
                     onClick={e => { e.stopPropagation(); setKeywordModal(true); }}
                   >
                     +{extraCount} more
@@ -388,11 +398,11 @@ export function KbCardView({ items, onClearFilters }: Props) {
             <div className="flex items-center justify-between flex-wrap gap-2">
               <span className="text-[11px] text-muted-foreground tabular-nums">Updated {item.lastUpdated}</span>
               <div className="flex gap-2">
-                <Button size="sm" variant="ghost" className="text-xs h-7 gap-1" onClick={handleViewDetails}>
+                <Button size="sm" variant="ghost" className="text-xs h-7 gap-1" type="button" onPointerDown={e => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); if (isEditing) { setPendingNav(-1); setShowUnsavedPrompt(true); return; } navigate(`/realx/${env}/train/kb/${item.id}`); }}>
                   <ExternalLink className="h-3 w-3" /> View details
                 </Button>
                 {canEdit && (
-                  <Button size="sm" variant="outline" className="text-xs h-7 gap-1" onClick={enterEdit}>
+                  <Button size="sm" variant="outline" className="text-xs h-7 gap-1" type="button" onPointerDown={e => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); enterEdit(); }}>
                     <Pencil className="h-3 w-3" /> Edit
                   </Button>
                 )}
