@@ -1,7 +1,6 @@
 import { PageHeader } from "@/components/platform/PageHeader";
 import { RequireRole } from "@/components/platform/RequireRole";
 import { routeMetadata } from "@/lib/mock-api";
-import { useTenant } from "@/contexts/TenantContext";
 import {
   getMetricsSnapshot,
   getActiveAlerts,
@@ -9,6 +8,13 @@ import {
   getFunnelData,
   getDailySummary,
 } from "@/lib/mock-metrics";
+import {
+  useDashboardSnapshot,
+  useDashboardTrend,
+  useDashboardFunnel,
+  useDailyMetrics,
+  useDashboardAlerts,
+} from "@/hooks/useDashboardMetrics";
 import { DashboardGrid, DashboardRow } from "@/components/dashboard/DashboardGrid";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { TrendChartCard } from "@/components/dashboard/TrendChartCard";
@@ -20,20 +26,35 @@ import { QuickActionsBar } from "@/components/dashboard/QuickActionsBar";
 import { SavedViewPicker } from "@/components/dashboard/SavedViewPicker";
 
 export default function OverviewPage() {
-  const { env } = useTenant();
-  const snapshot = getMetricsSnapshot(env);
-  const alerts = getActiveAlerts(env);
-  const trend = getTrendData(env);
-  const funnel = getFunnelData(env);
-  const summary = getDailySummary(env);
+  // Live hooks
+  const { data: liveSnapshot } = useDashboardSnapshot();
+  const { data: liveTrend } = useDashboardTrend();
+  const { data: liveFunnel } = useDashboardFunnel();
+  const { data: liveDaily } = useDailyMetrics();
+  const { data: liveAlerts } = useDashboardAlerts();
+
+  // Fallback to mock when Supabase returns nothing
+  const snapshot = (liveSnapshot && liveSnapshot.kpis.totalConversations > 0)
+    ? liveSnapshot : getMetricsSnapshot("prod");
+  const trend = (liveTrend && liveTrend.some(p => p.conversations > 0))
+    ? liveTrend : getTrendData("prod");
+  const funnel = (liveFunnel && liveFunnel.some(f => f.value > 0))
+    ? liveFunnel : getFunnelData("prod");
+  const daily = (liveDaily && liveDaily.length > 0)
+    ? liveDaily : getDailySummary("prod");
+  const alerts = liveAlerts ?? getActiveAlerts("prod");
+
   const kpis = snapshot.kpis;
+  const isLive = liveSnapshot && liveSnapshot.kpis.totalConversations > 0;
 
   return (
     <RequireRole allowedRoles={routeMetadata.overview.allowedRoles}>
       <DashboardGrid>
         <PageHeader
           title="Overview"
-          subtitle="High-level metrics and system health at a glance."
+          subtitle={isLive
+            ? "Live data from Supabase · refreshes every 60s"
+            : "Showing sample data — no conversations recorded yet"}
           actions={<SavedViewPicker />}
         />
 
@@ -42,36 +63,31 @@ export default function OverviewPage() {
           <KpiCard
             label="Total Conversations"
             value={kpis.totalConversations.toLocaleString()}
-            change={env === "dev" ? 5.2 : 3.1}
-            tooltip="Total unique conversations in the selected period"
+            tooltip="Total unique conversations"
           />
           <KpiCard
             label="Containment Rate"
             value={`${Math.round(kpis.containmentRate * 100)}%`}
-            change={env === "dev" ? 2.1 : 1.4}
             variant={kpis.containmentRate >= 0.7 ? "success" : "warning"}
-            tooltip="Resolved_by_BOT / Total_Conversations"
+            tooltip="Bot resolved without escalation / Total"
           />
           <KpiCard
             label="Cache Hit Rate"
             value={`${Math.round(kpis.cacheHitRate * 100)}%`}
-            change={env === "dev" ? -1.3 : 4.2}
-            tooltip="CacheHit_Conversations / Total_Conversations"
+            tooltip="Responses served from knowledge cache / Total"
           />
           <KpiCard
             label="Escalation Rate"
             value={`${Math.round(kpis.escalationRate * 100)}%`}
-            change={env === "dev" ? -3.5 : -1.8}
             invertChange
             variant={kpis.escalationRate > 0.25 ? "warning" : "default"}
-            tooltip="Conversations escalated to human agents / Total"
+            tooltip="Conversations routed to human agents / Total"
           />
           <KpiCard
-            label="P0 SLA Met"
-            value={`${Math.round(kpis.p0SlaFirstResponse * 100)}%`}
-            change={env === "dev" ? 0.8 : 0.3}
-            variant={kpis.p0SlaFirstResponse >= 0.9 ? "success" : "danger"}
-            tooltip="% of P0 tickets with first response within SLA"
+            label="Confidence"
+            value={`${Math.round(snapshot.confidenceBands.high * 100)}% high`}
+            variant={snapshot.confidenceBands.high >= 0.6 ? "success" : "warning"}
+            tooltip="% of conversations answered with high confidence (≥ 0.72)"
           />
         </DashboardRow>
 
@@ -90,7 +106,7 @@ export default function OverviewPage() {
             <AlertList alerts={alerts} />
           </div>
           <div className="lg:col-span-1">
-            <DailyWeeklySummaryCard items={summary} />
+            <DailyWeeklySummaryCard items={daily} />
           </div>
           <div className="lg:col-span-1">
             <QuickActionsBar />
