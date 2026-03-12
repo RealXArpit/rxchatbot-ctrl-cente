@@ -327,8 +327,10 @@ export function KbCardView({ items, onClearFilters }: Props) {
               </p>
               {isLong && (
                 <button
+                  type="button"
                   className="text-xs text-primary mt-1 hover:underline"
-                  onClick={e => { e.stopPropagation(); setExpanded(p => !p); }}
+                  onPointerDown={e => e.stopPropagation()}
+                  onClick={e => { e.stopPropagation(); setExpanded(prev => !prev); }}
                 >
                   {expanded ? "Show less ↑" : "Read more ↓"}
                 </button>
