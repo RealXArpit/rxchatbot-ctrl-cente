@@ -360,7 +360,9 @@ export function KbCardView({ items, onClearFilters }: Props) {
                 ))}
                 {extraCount > 0 && (
                   <button
+                    type="button"
                     className="text-[11px] text-primary hover:underline"
+                    onPointerDown={e => e.stopPropagation()}
                     onClick={e => { e.stopPropagation(); setKeywordModal(true); }}
                   >
                     +{extraCount} more
