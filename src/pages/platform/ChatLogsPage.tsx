@@ -166,7 +166,7 @@ export default function ChatLogsPage() {
                         <TableCell className="max-w-[200px] truncate text-xs">{s.last_message}</TableCell>
                         <TableCell className="text-right tabular-nums">{s.turn_count}</TableCell>
                         <TableCell className="text-right tabular-nums">{s.avg_confidence.toFixed(2)}</TableCell>
-                        <TableCell><Timestamp iso={s.last_message_at} /></TableCell>
+                        <TableCell><Timestamp date={s.last_message_at} /></TableCell>
                         <TableCell>
                           <Badge variant={s.is_active ? "default" : "secondary"} className={s.is_active ? "bg-success text-success-foreground" : ""}>
                             {s.is_active ? "Active" : "Inactive"}
