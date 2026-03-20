@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BookPlus, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,13 +10,16 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import type { SelectedMessage } from "./TranscriptWithSelection";
 
 interface Props {
   ticketId: string;
   status: string;
+  selectedMessages?: SelectedMessage[];
+  onSuccess?: () => void;
 }
 
-export function CreateKbFromTicketButton({ ticketId, status }: Props) {
+export function CreateKbFromTicketButton({ ticketId, status, selectedMessages = [], onSuccess }: Props) {
   const { session } = useAuth();
 
   const [open, setOpen] = useState(false);
@@ -28,9 +31,14 @@ export function CreateKbFromTicketButton({ ticketId, status }: Props) {
 
   if (status === "RESOLVED" || status === "CLOSED") return null;
 
+  const hasSelection = selectedMessages.length > 0;
+
   const handleOpen = () => {
-    setQuestion("");
-    setAnswer("");
+    // Pre-fill from selected messages
+    const firstUser = selectedMessages.find((m) => m.role === "user");
+    const firstAgent = selectedMessages.find((m) => m.role === "agent");
+    setQuestion(firstUser?.text ?? "");
+    setAnswer(firstAgent?.text ?? "");
     setKeywords("");
     setError(null);
     setOpen(true);
@@ -53,6 +61,7 @@ export function CreateKbFromTicketButton({ ticketId, status }: Props) {
       if (insertError) throw insertError;
       toast.success("KB entry created as DRAFT");
       setOpen(false);
+      onSuccess?.();
     } catch (err: any) {
       setError(err?.message ?? "Failed to insert — please try again");
     } finally {
@@ -64,9 +73,20 @@ export function CreateKbFromTicketButton({ ticketId, status }: Props) {
 
   return (
     <>
-      <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={handleOpen}>
+      <Button
+        variant="outline"
+        size="sm"
+        className="gap-1.5 text-xs"
+        disabled={!hasSelection}
+        onClick={handleOpen}
+      >
         <BookPlus className="h-3.5 w-3.5" />
         Create KB Item
+        {hasSelection && (
+          <span className="ml-1 rounded-full bg-primary text-primary-foreground text-[10px] px-1.5 py-0 leading-4">
+            {selectedMessages.length}
+          </span>
+        )}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -78,10 +98,12 @@ export function CreateKbFromTicketButton({ ticketId, status }: Props) {
           <div className="space-y-4">
             <div>
               <Label className="text-xs mb-1 block">Question *</Label>
-              <Input
+              <Textarea
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="Enter the question"
+                rows={2}
+                maxLength={500}
                 className="text-sm"
               />
             </div>
@@ -93,6 +115,7 @@ export function CreateKbFromTicketButton({ ticketId, status }: Props) {
                 onChange={(e) => setAnswer(e.target.value)}
                 placeholder="Enter the answer"
                 rows={4}
+                maxLength={2000}
                 className="text-sm"
               />
             </div>
