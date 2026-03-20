@@ -62,6 +62,7 @@ export default function TrainPage() {
   };
 
   const { data: liveData, isLoading, error, refetch } = useKbItems();
+  const { data: curatedQuestions } = usePublishedCuratedQuestions();
 
   const items = useMemo(() => {
     let source: KnowledgeBaseItem[];
