@@ -18,6 +18,7 @@ import { InternalNotes } from "@/components/escalations/InternalNotes";
 import { ResolutionForm } from "@/components/escalations/ResolutionForm";
 import { TakeoverShell } from "@/components/escalations/TakeoverShell";
 import { CreateKbFromTicketButton } from "@/components/escalations/CreateKbFromTicketButton";
+import { TranscriptWithSelection, type SelectedMessage } from "@/components/escalations/TranscriptWithSelection";
 import { AgentReplyForm } from "@/components/escalations/AgentReplyForm";
 import { AgentPollBanner } from "@/components/escalations/AgentPollBanner";
 import { toast } from "sonner";
@@ -45,6 +46,7 @@ export default function EscalationDetailPage() {
   const [mockTicket] = useState<EscalationTicket | null>(() => getEscalationById(ticketId ?? ""));
   const ticket = liveTicket ?? mockTicket;
   const [lastSent, setLastSent] = useState<Date | null>(null);
+  const [selectedMessages, setSelectedMessages] = useState<SelectedMessage[]>([]);
 
   const refresh = useCallback(() => {
     refetch();
@@ -122,6 +124,10 @@ export default function EscalationDetailPage() {
     }
   };
 
+  const handleKbSuccess = () => {
+    setSelectedMessages([]);
+  };
+
   return (
     <div>
       <div className="px-6 pt-4 pb-2">
@@ -176,11 +182,19 @@ export default function EscalationDetailPage() {
             <CreateKbFromTicketButton
               ticketId={ticket.id}
               status={ticket.status}
+              selectedMessages={selectedMessages}
+              onSuccess={handleKbSuccess}
             />
           </div>
         </div>
 
         <div className="lg:col-span-2 space-y-4">
+          <TranscriptWithSelection
+            sessionId={ticket.sessionId}
+            selectedMessages={selectedMessages}
+            onSelectionChange={setSelectedMessages}
+          />
+
           <TakeoverShell
             replies={ticket.replies}
             onReply={handleReply}
