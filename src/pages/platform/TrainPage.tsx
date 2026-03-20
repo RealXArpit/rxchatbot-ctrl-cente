@@ -149,6 +149,10 @@ export default function TrainPage() {
             )}
           </TabsContent>
 
+          <TabsContent value="curated">
+            <CuratedKbTable />
+          </TabsContent>
+
           <TabsContent value="testbench">
             <TestbenchPanel />
           </TabsContent>
