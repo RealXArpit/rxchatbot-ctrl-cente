@@ -141,7 +141,7 @@ export default function TrainPage() {
           <TabsContent value="kb" className="space-y-3">
             <KbFiltersBar filters={filters} onChange={setFilters} />
             {kbView === "list" ? (
-              <KbTable items={items} isAuditor={isAuditor} />
+              <KbTable items={items} isAuditor={isAuditor} curatedQuestions={curatedQuestions} />
             ) : (
               <KbCardView
                 items={items}
