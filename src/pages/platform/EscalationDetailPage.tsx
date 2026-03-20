@@ -173,7 +173,12 @@ export default function EscalationDetailPage() {
           </Card>
 
           <div className="flex gap-2 flex-wrap">
-            <CreateKbFromTicketButton ticketId={ticket.id} />
+            <CreateKbFromTicketButton
+              ticketId={ticket.id}
+              sessionId={ticket.sessionId}
+              escalationId={ticket.id}
+              status={ticket.status}
+            />
           </div>
         </div>
 
