@@ -12,7 +12,7 @@ import { KbFiltersBar, type KbFilterState } from "@/components/knowledge/KbFilte
 import { TestbenchPanel } from "@/components/knowledge/TestbenchPanel";
 import { LoadingSkeleton } from "@/components/platform/LoadingSkeleton";
 import { ErrorPanel } from "@/components/platform/ErrorPanel";
-import { useKbItems } from "@/hooks/useKbItems";
+import { useKbItems, usePublishedCuratedQuestions } from "@/hooks/useKbItems";
 import { KbCardView } from "@/components/knowledge/KbCardView";
 
 function mapLiveRow(row: any): KnowledgeBaseItem {
