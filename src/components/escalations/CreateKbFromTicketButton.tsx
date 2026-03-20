@@ -155,6 +155,10 @@ export function CreateKbFromTicketButton({ ticketId, sessionId, escalationId, st
     }
   };
 
+  // Only show for allowed roles + resolved/closed tickets
+  if (!role || !ALLOWED_ROLES.includes(role)) return null;
+  if (status !== "RESOLVED" && status !== "CLOSED") return null;
+
   const roleBadgeColor: Record<string, string> = {
     User: "bg-primary/10 text-primary",
     Agent: "bg-warning/10 text-warning-foreground",
