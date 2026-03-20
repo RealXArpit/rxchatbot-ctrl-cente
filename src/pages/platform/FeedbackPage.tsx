@@ -54,7 +54,7 @@ function AdminSuggestionsTab() {
   if (!data || data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-        <p className="text-sm">No suggestions yet</p>
+        <p className="text-sm">No suggestions submitted yet</p>
       </div>
     );
   }
