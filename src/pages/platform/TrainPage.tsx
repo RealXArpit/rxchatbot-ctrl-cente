@@ -12,7 +12,7 @@ import { KbFiltersBar, type KbFilterState } from "@/components/knowledge/KbFilte
 import { TestbenchPanel } from "@/components/knowledge/TestbenchPanel";
 import { LoadingSkeleton } from "@/components/platform/LoadingSkeleton";
 import { ErrorPanel } from "@/components/platform/ErrorPanel";
-import { useKbItems } from "@/hooks/useKbItems";
+import { useKbItems, usePublishedCuratedQuestions } from "@/hooks/useKbItems";
 import { KbCardView } from "@/components/knowledge/KbCardView";
 
 function mapLiveRow(row: any): KnowledgeBaseItem {
@@ -62,6 +62,7 @@ export default function TrainPage() {
   };
 
   const { data: liveData, isLoading, error, refetch } = useKbItems();
+  const { data: curatedQuestions } = usePublishedCuratedQuestions();
 
   const items = useMemo(() => {
     let source: KnowledgeBaseItem[];
@@ -140,7 +141,7 @@ export default function TrainPage() {
           <TabsContent value="kb" className="space-y-3">
             <KbFiltersBar filters={filters} onChange={setFilters} />
             {kbView === "list" ? (
-              <KbTable items={items} isAuditor={isAuditor} />
+              <KbTable items={items} isAuditor={isAuditor} curatedQuestions={curatedQuestions} />
             ) : (
               <KbCardView
                 items={items}
