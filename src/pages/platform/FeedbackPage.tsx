@@ -36,6 +36,8 @@ function AdminSuggestionsTab() {
   const { data, isLoading } = useSuggestedAnswers();
   const reviewMutation = useReviewSuggestedAnswer();
   const userEmail = session?.user?.email ?? session?.user?.name ?? "unknown";
+  const role = session?.user?.role ?? "";
+  const canReview = CAN_REVIEW.includes(role);
 
   const handleReview = (id: string, status: "APPROVED" | "REJECTED") => {
     reviewMutation.mutate(
