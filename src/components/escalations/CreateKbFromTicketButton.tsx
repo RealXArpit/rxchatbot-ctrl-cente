@@ -45,10 +45,6 @@ export function CreateKbFromTicketButton({ ticketId, sessionId, escalationId, st
   const { session } = useAuth();
   const role = session?.user.role;
 
-  // Only show for allowed roles + resolved/closed tickets
-  if (!role || !ALLOWED_ROLES.includes(role)) return null;
-  if (status !== "RESOLVED" && status !== "CLOSED") return null;
-
   const [open, setOpen] = useState(false);
   const [transcript, setTranscript] = useState<TranscriptTurn[]>([]);
   const [loadingTranscript, setLoadingTranscript] = useState(false);
