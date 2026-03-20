@@ -81,9 +81,8 @@ function AdminSuggestionsTab() {
             const isReviewing = reviewMutation.isPending;
             return (
               <TableRow key={row.id}>
-                <TableCell className="max-w-[160px] text-xs">{truncate(row.user_message, 80)}</TableCell>
-                <TableCell className="max-w-[160px] text-xs text-muted-foreground">{truncate(row.original_answer, 80)}</TableCell>
-                <TableCell className="max-w-[160px] text-xs">{truncate(row.suggested_answer, 80)}</TableCell>
+                <TableCell className="max-w-[160px] text-xs">{truncate(row.user_message, 60)}</TableCell>
+                <TableCell className="max-w-[160px] text-xs">{truncate(row.suggested_answer, 60)}</TableCell>
                 <TableCell className="text-xs">{row.suggested_by}</TableCell>
                 <TableCell>
                   <Badge variant={badge.variant} className={badge.className}>
