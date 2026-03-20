@@ -76,6 +76,8 @@ function AdminSuggestionsTab() {
           {data.map((row) => {
             const badge = statusBadge[row.status] ?? statusBadge.PENDING;
             const isPending = row.status === "PENDING";
+            const isOwnSuggestion = row.suggested_by === userEmail;
+            const showActions = isPending && canReview && !isOwnSuggestion;
             const isReviewing = reviewMutation.isPending;
             return (
               <TableRow key={row.id}>
