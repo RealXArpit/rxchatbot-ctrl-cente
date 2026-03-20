@@ -26,13 +26,18 @@ const statusBadge: Record<string, { variant: "default" | "secondary" | "destruct
   APPROVED: { variant: "default",     className: "bg-success text-success-foreground" },
   REJECTED: { variant: "destructive", className: "" },
   EXPIRED:  { variant: "secondary",   className: "" },
+  APPLIED:  { variant: "default",     className: "bg-primary text-primary-foreground" },
 };
+
+const CAN_REVIEW: string[] = ["SuperAdmin", "OpsManager"];
 
 function AdminSuggestionsTab() {
   const { session } = useAuth();
   const { data, isLoading } = useSuggestedAnswers();
   const reviewMutation = useReviewSuggestedAnswer();
   const userEmail = session?.user?.email ?? session?.user?.name ?? "unknown";
+  const role = session?.user?.role ?? "";
+  const canReview = CAN_REVIEW.includes(role);
 
   const handleReview = (id: string, status: "APPROVED" | "REJECTED") => {
     reviewMutation.mutate(
@@ -49,7 +54,7 @@ function AdminSuggestionsTab() {
   if (!data || data.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-        <p className="text-sm">No suggestions yet</p>
+        <p className="text-sm">No suggestions submitted yet</p>
       </div>
     );
   }
@@ -60,7 +65,6 @@ function AdminSuggestionsTab() {
         <TableHeader>
           <TableRow>
             <TableHead>User Message</TableHead>
-            <TableHead>Original Answer</TableHead>
             <TableHead>Suggested Answer</TableHead>
             <TableHead>Suggested By</TableHead>
             <TableHead>Status</TableHead>
@@ -72,12 +76,13 @@ function AdminSuggestionsTab() {
           {data.map((row) => {
             const badge = statusBadge[row.status] ?? statusBadge.PENDING;
             const isPending = row.status === "PENDING";
+            const isOwnSuggestion = row.suggested_by === userEmail;
+            const showActions = isPending && canReview && !isOwnSuggestion;
             const isReviewing = reviewMutation.isPending;
             return (
               <TableRow key={row.id}>
-                <TableCell className="max-w-[160px] text-xs">{truncate(row.user_message, 80)}</TableCell>
-                <TableCell className="max-w-[160px] text-xs text-muted-foreground">{truncate(row.original_answer, 80)}</TableCell>
-                <TableCell className="max-w-[160px] text-xs">{truncate(row.suggested_answer, 80)}</TableCell>
+                <TableCell className="max-w-[160px] text-xs">{truncate(row.user_message, 60)}</TableCell>
+                <TableCell className="max-w-[160px] text-xs">{truncate(row.suggested_answer, 60)}</TableCell>
                 <TableCell className="text-xs">{row.suggested_by}</TableCell>
                 <TableCell>
                   <Badge variant={badge.variant} className={badge.className}>
@@ -86,7 +91,7 @@ function AdminSuggestionsTab() {
                 </TableCell>
                 <TableCell><Timestamp date={row.suggested_at} /></TableCell>
                 <TableCell className="text-right">
-                  {isPending && (
+                  {showActions && (
                     <div className="flex items-center justify-end gap-1">
                       <Button
                         size="sm" variant="ghost"
