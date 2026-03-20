@@ -65,7 +65,6 @@ function AdminSuggestionsTab() {
         <TableHeader>
           <TableRow>
             <TableHead>User Message</TableHead>
-            <TableHead>Original Answer</TableHead>
             <TableHead>Suggested Answer</TableHead>
             <TableHead>Suggested By</TableHead>
             <TableHead>Status</TableHead>
