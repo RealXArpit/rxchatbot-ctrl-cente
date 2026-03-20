@@ -11,12 +11,33 @@ const statusColor: Record<string, string> = {
   Archived: "bg-muted text-muted-foreground",
 };
 
+function getSourceBadge(item: KnowledgeBaseItem, curatedQuestions?: string[]) {
+  // Check explicit source field first
+  const source = (item as any).source as string | undefined;
+  if (source === "FROM_ESCALATION" || source === "CURATED") {
+    return <Badge className="ml-1.5 bg-primary/15 text-primary border-primary/30 text-[10px] px-1.5 py-0" variant="outline">Curated</Badge>;
+  }
+  if (source === "ADMIN_CORRECTION") {
+    return <Badge className="ml-1.5 bg-[hsl(270_60%_50%/0.15)] text-[hsl(270_60%_50%)] border-[hsl(270_60%_50%/0.3)] text-[10px] px-1.5 py-0" variant="outline">Admin</Badge>;
+  }
+  // Fallback: match against published curated questions
+  if (curatedQuestions && curatedQuestions.length > 0) {
+    const q = item.question.toLowerCase().trim();
+    const match = curatedQuestions.some(cq => cq === q || q.includes(cq));
+    if (match) {
+      return <Badge className="ml-1.5 bg-primary/15 text-primary border-primary/30 text-[10px] px-1.5 py-0" variant="outline">Curated</Badge>;
+    }
+  }
+  return null;
+}
+
 interface Props {
   items: KnowledgeBaseItem[];
   isAuditor?: boolean;
+  curatedQuestions?: string[];
 }
 
-export function KbTable({ items, isAuditor }: Props) {
+export function KbTable({ items, isAuditor, curatedQuestions }: Props) {
   const navigate = useNavigate();
   const { env } = useParams<{ env: string }>();
 
@@ -36,6 +57,7 @@ export function KbTable({ items, isAuditor }: Props) {
           <TableHead className="w-24">Category</TableHead>
           <TableHead>Question</TableHead>
           {!isAuditor && <TableHead className="hidden lg:table-cell">Answer</TableHead>}
+          <TableHead className="w-20">Source</TableHead>
           <TableHead className="w-24">Status</TableHead>
           <TableHead className="w-32">Updated</TableHead>
         </TableRow>
@@ -51,6 +73,7 @@ export function KbTable({ items, isAuditor }: Props) {
             <TableCell className="text-xs">{item.category}</TableCell>
             <TableCell className="text-xs max-w-xs truncate">{item.question}</TableCell>
             {!isAuditor && <TableCell className="text-xs max-w-xs truncate hidden lg:table-cell text-muted-foreground">{item.answer}</TableCell>}
+            <TableCell>{getSourceBadge(item, curatedQuestions)}</TableCell>
             <TableCell>
               <Badge variant="outline" className={statusColor[item.status]}>{item.status}</Badge>
             </TableCell>

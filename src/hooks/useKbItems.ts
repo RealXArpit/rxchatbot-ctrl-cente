@@ -1,6 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
+export function usePublishedCuratedQuestions() {
+  return useQuery({
+    queryKey: ['curated_kb_published_questions'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('curated_kb')
+        .select('id, question')
+        .eq('status', 'PUBLISHED');
+      if (error) throw error;
+      return (data ?? []).map(r => r.question?.toLowerCase().trim() ?? '');
+    },
+    refetchInterval: 60000,
+  });
+}
+
 export function useKbItems() {
   return useQuery({
     queryKey: ['knowledge_base'],
