@@ -26,7 +26,10 @@ const statusBadge: Record<string, { variant: "default" | "secondary" | "destruct
   APPROVED: { variant: "default",     className: "bg-success text-success-foreground" },
   REJECTED: { variant: "destructive", className: "" },
   EXPIRED:  { variant: "secondary",   className: "" },
+  APPLIED:  { variant: "default",     className: "bg-primary text-primary-foreground" },
 };
+
+const CAN_REVIEW: string[] = ["SuperAdmin", "OpsManager"];
 
 function AdminSuggestionsTab() {
   const { session } = useAuth();
