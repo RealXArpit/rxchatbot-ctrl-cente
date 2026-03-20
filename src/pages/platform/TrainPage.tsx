@@ -2,7 +2,8 @@ import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Plus, FlaskConical, FileText, LayoutList, LayoutGrid } from "lucide-react";
+import { Plus, FlaskConical, FileText, LayoutList, LayoutGrid, BookCheck } from "lucide-react";
+import { CuratedKbTable } from "@/components/knowledge/CuratedKbTable";
 import { PageHeader } from "@/components/platform/PageHeader";
 import { useAuth } from "@/contexts/AuthContext";
 import { getKbItems, type KbFilters, type KnowledgeBaseItem } from "@/lib/mock-kb";
@@ -108,6 +109,7 @@ export default function TrainPage() {
             <TabsList>
               <TabsTrigger value="kb">Knowledge Base</TabsTrigger>
               <TabsTrigger value="testbench"><FlaskConical className="h-3.5 w-3.5 mr-1" />Testbench</TabsTrigger>
+              <TabsTrigger value="curated"><BookCheck className="h-3.5 w-3.5 mr-1" />Curated</TabsTrigger>
               <TabsTrigger value="prompts"><FileText className="h-3.5 w-3.5 mr-1" />Prompts</TabsTrigger>
             </TabsList>
             <div className="flex items-center gap-2">
@@ -145,6 +147,10 @@ export default function TrainPage() {
                 onClearFilters={() => setFilters({ q: "", status: "", category: "" })}
               />
             )}
+          </TabsContent>
+
+          <TabsContent value="curated">
+            <CuratedKbTable />
           </TabsContent>
 
           <TabsContent value="testbench">
