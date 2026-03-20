@@ -14,6 +14,13 @@ import { LiveDataBanner } from "@/components/chat-logs/LiveDataBanner";
 import { LoadingSkeleton } from "@/components/platform/LoadingSkeleton";
 import { ErrorPanel } from "@/components/platform/ErrorPanel";
 import { useChatLogs } from "@/hooks/useChatLogs";
+import { useLiveSessions } from "@/hooks/useLiveSessions";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Timestamp } from "@/components/platform/Timestamp";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
 
 function mapLiveRow(row: any): Conversation {
   return {
@@ -55,8 +62,8 @@ export default function ChatLogsPage() {
   const pageSize = 25;
 
   const { data: liveData, isLoading, error, refetch } = useChatLogs();
+  const { data: liveSessions, isLoading: sessionsLoading } = useLiveSessions();
 
-  // Apply sessionId param on mount / change
   useEffect(() => {
     if (sessionIdParam) {
       setFilters((prev) => ({ ...prev, q: sessionIdParam }));
@@ -64,13 +71,11 @@ export default function ChatLogsPage() {
     }
   }, [sessionIdParam]);
 
-  // Map live data or fall back to mock data
   const hasLiveData = liveData && liveData.length > 0;
 
   const result = useMemo(() => {
     if (hasLiveData) {
       const mapped = liveData.map(mapLiveRow);
-      // Apply simple client-side filtering for sessionId
       const filtered = filters.q
         ? mapped.filter(
             (c) =>
@@ -106,23 +111,75 @@ export default function ChatLogsPage() {
           }
         />
 
-        {!hasLiveData && <LiveDataBanner />}
-        {isLoading && <LoadingSkeleton />}
-        {error && !isLoading && <ErrorPanel onRetry={() => refetch()} />}
+        <Tabs defaultValue="past">
+          <TabsList>
+            <TabsTrigger value="past">Past Chats</TabsTrigger>
+            <TabsTrigger value="live">Live Chats</TabsTrigger>
+          </TabsList>
 
-        {!isLoading && (
-          <>
-            <LogsFiltersBar filters={filters} onChange={handleFilterChange} />
-            <LogsTable
-              items={result.items}
-              columns={columns}
-              page={result.page}
-              pageSize={result.pageSize}
-              total={result.total}
-              onPageChange={setPage}
-            />
-          </>
-        )}
+          <TabsContent value="past" className="space-y-4 mt-4">
+            {!hasLiveData && <LiveDataBanner />}
+            {isLoading && <LoadingSkeleton />}
+            {error && !isLoading && <ErrorPanel onRetry={() => refetch()} />}
+
+            {!isLoading && (
+              <>
+                <LogsFiltersBar filters={filters} onChange={handleFilterChange} />
+                <LogsTable
+                  items={result.items}
+                  columns={columns}
+                  page={result.page}
+                  pageSize={result.pageSize}
+                  total={result.total}
+                  onPageChange={setPage}
+                />
+              </>
+            )}
+          </TabsContent>
+
+          <TabsContent value="live" className="mt-4">
+            {sessionsLoading && <LoadingSkeleton />}
+            {!sessionsLoading && (!liveSessions || liveSessions.length === 0) && (
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <p className="text-sm">No active sessions</p>
+              </div>
+            )}
+            {!sessionsLoading && liveSessions && liveSessions.length > 0 && (
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Session ID</TableHead>
+                      <TableHead>Channel</TableHead>
+                      <TableHead>Last Message</TableHead>
+                      <TableHead className="text-right">Turn Count</TableHead>
+                      <TableHead className="text-right">Avg Confidence</TableHead>
+                      <TableHead>Last Active</TableHead>
+                      <TableHead>Is Active</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {liveSessions.map((s) => (
+                      <TableRow key={s.id}>
+                        <TableCell className="font-mono text-xs">{s.session_id.slice(0, 20)}{s.session_id.length > 20 ? "…" : ""}</TableCell>
+                        <TableCell>{s.channel}</TableCell>
+                        <TableCell className="max-w-[200px] truncate text-xs">{s.last_message}</TableCell>
+                        <TableCell className="text-right tabular-nums">{s.turn_count}</TableCell>
+                        <TableCell className="text-right tabular-nums">{s.avg_confidence.toFixed(2)}</TableCell>
+                        <TableCell><Timestamp date={s.last_message_at} /></TableCell>
+                        <TableCell>
+                          <Badge variant={s.is_active ? "default" : "secondary"} className={s.is_active ? "bg-success text-success-foreground" : ""}>
+                            {s.is_active ? "Active" : "Inactive"}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </RequireRole>
   );
