@@ -7,7 +7,7 @@ export interface CuratedKbRow {
   answer: string;
   keywords: string | null;
   category: string | null;
-  status: 'DRAFT' | 'PROPOSED' | 'PUBLISHED' | 'ARCHIVED';
+  status: 'DRAFT' | 'PROPOSED' | 'PUBLISHED' | 'ARCHIVED' | 'REJECTED';
   escalation_id: string | null;
   session_id: string | null;
   created_by: string | null;
