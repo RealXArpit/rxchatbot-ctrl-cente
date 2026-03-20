@@ -91,7 +91,7 @@ function AdminSuggestionsTab() {
                 </TableCell>
                 <TableCell><Timestamp date={row.suggested_at} /></TableCell>
                 <TableCell className="text-right">
-                  {isPending && (
+                  {showActions && (
                     <div className="flex items-center justify-end gap-1">
                       <Button
                         size="sm" variant="ghost"
