@@ -128,7 +128,7 @@ export function CuratedKbTable() {
                 <Badge variant="outline" className={statusBadge[row.status] ?? ""}>{row.status}</Badge>
               </TableCell>
               <TableCell className="text-xs text-muted-foreground truncate max-w-[140px]">{row.created_by ?? "—"}</TableCell>
-              <TableCell className="text-xs"><Timestamp iso={row.created_at} /></TableCell>
+              <TableCell className="text-xs"><Timestamp date={row.created_at} /></TableCell>
               <TableCell onClick={(e) => e.stopPropagation()}>{renderActions(row)}</TableCell>
             </TableRow>
             {expandedId === row.id && (
