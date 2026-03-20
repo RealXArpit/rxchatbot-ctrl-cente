@@ -57,6 +57,7 @@ export function CreateKbFromTicketButton({ ticketId, status, selectedMessages = 
         status: "DRAFT",
         created_by: session?.user?.email ?? session?.user?.name ?? "unknown",
         created_at: new Date().toISOString(),
+        message_pair_ids: JSON.stringify(selectedMessages.map(m => m.id)),
       });
       if (insertError) throw insertError;
       toast.success("KB entry created as DRAFT");
