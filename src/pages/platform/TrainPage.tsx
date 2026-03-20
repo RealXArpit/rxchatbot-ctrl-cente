@@ -109,6 +109,7 @@ export default function TrainPage() {
             <TabsList>
               <TabsTrigger value="kb">Knowledge Base</TabsTrigger>
               <TabsTrigger value="testbench"><FlaskConical className="h-3.5 w-3.5 mr-1" />Testbench</TabsTrigger>
+              <TabsTrigger value="curated"><BookCheck className="h-3.5 w-3.5 mr-1" />Curated</TabsTrigger>
               <TabsTrigger value="prompts"><FileText className="h-3.5 w-3.5 mr-1" />Prompts</TabsTrigger>
             </TabsList>
             <div className="flex items-center gap-2">
