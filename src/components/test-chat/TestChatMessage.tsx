@@ -69,14 +69,25 @@ export function TestChatMessage({ message, showDebug, onFeedback }: Props) {
     );
   }
 
-  // Bot message
+  // Bot / Agent message
+  const isAgentMessage = text.startsWith("🧑‍💼 Agent:");
+  const displayText = isAgentMessage ? text.replace(/^🧑‍💼 Agent:\s*/, "") : text;
+
   return (
     <div className="flex flex-col items-start gap-1">
-      <div className="max-w-[85%] rounded-2xl rounded-bl-sm bg-muted px-3.5 py-2 text-sm">
+      <div className={cn(
+        "max-w-[85%] rounded-2xl rounded-bl-sm px-3.5 py-2 text-sm",
+        isAgentMessage
+          ? "bg-amber-50 dark:bg-amber-950/30 border border-amber-200"
+          : "bg-muted"
+      )}>
+        {isAgentMessage && (
+          <p className="text-[10px] font-medium text-amber-600 dark:text-amber-400 mb-0.5">Support Agent</p>
+        )}
         {isLoading ? (
           <TypingIndicator />
         ) : (
-          <span className="whitespace-pre-line">{text}</span>
+          <span className="whitespace-pre-line">{displayText}</span>
         )}
       </div>
 
