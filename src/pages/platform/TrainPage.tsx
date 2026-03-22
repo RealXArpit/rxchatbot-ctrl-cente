@@ -52,6 +52,8 @@ export default function TrainPage() {
 
   const [tab, setTab] = useState("kb");
   const [filters, setFilters] = useState<KbFilterState>({ q: "", status: "", category: "" });
+  const PAGE_SIZE = 20;
+  const [page, setPage] = useState(1);
   const [kbView, setKbView] = useState<"list" | "cards">(() => {
     return (localStorage.getItem("rxchat_kb_view") as "list" | "cards") ?? "list";
   });
