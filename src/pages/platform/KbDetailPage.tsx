@@ -220,7 +220,7 @@ export default function KbDetailPage() {
   return (
     <div>
       <div className="px-6 pt-4 pb-2">
-        <Button variant="ghost" size="sm" className="gap-1 mb-2 text-xs" onClick={() => navigate(`/realx/${env}/train`)}>
+        <Button variant="ghost" size="sm" className="gap-1 mb-2 text-xs" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-3.5 w-3.5" /> Knowledge Base
         </Button>
         <h1 className="text-lg font-semibold text-foreground">{isNew ? "New KB Item" : item!.id}</h1>
