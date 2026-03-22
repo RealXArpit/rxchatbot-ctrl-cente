@@ -199,6 +199,12 @@ export function useTestChat() {
         }));
         return [...prev, ...newMsgs];
       });
+
+      // Show a toast notification so user knows agent replied
+      toast({
+        title: "Support Agent replied",
+        description: newAgentMessages[newAgentMessages.length - 1].agent_message.slice(0, 80),
+      });
     } catch {
       // Silent fail — polling should never crash the chat
     }
