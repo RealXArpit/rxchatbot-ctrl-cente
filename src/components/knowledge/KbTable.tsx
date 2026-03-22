@@ -54,7 +54,7 @@ export function KbTable({ items, isAuditor, curatedQuestions, startIndex = 0 }: 
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-20">ID</TableHead>
+          <TableHead className="w-12">#</TableHead>
           <TableHead className="w-24">Category</TableHead>
           <TableHead>Question</TableHead>
           {!isAuditor && <TableHead className="hidden lg:table-cell">Answer</TableHead>}
