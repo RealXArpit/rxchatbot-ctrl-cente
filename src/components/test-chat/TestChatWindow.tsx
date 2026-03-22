@@ -141,6 +141,11 @@ export function TestChatWindow({
         </Tooltip>
       )}
 
+      {/* Note banner */}
+      <div className="px-3 py-1.5 text-[10px] text-amber-600 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400 border-b border-border leading-snug">
+        Stop the session once you are done testing to maintain clean data.
+      </div>
+
       {/* Messages */}
       <div ref={listRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
         {session.messages.length === 0 && (
