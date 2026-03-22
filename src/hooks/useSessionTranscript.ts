@@ -6,7 +6,7 @@ export function useSessionTranscript(sessionId: string | null | undefined) {
   return useQuery({
     queryKey: ['session_transcript', sessionId],
     enabled: typeof sessionId === 'string' && sessionId.length > 0,
-    staleTime: 30000,
+    staleTime: 0,
     queryFn: async () => {
       if (!sessionId) return [];
       const { data, error } = await supabase
