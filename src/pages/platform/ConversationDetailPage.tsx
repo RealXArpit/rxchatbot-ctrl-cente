@@ -12,6 +12,9 @@ import { Separator } from "@/components/ui/separator";
 import { useSessionTranscript } from "@/hooks/useSessionTranscript";
 import { LoadingSkeleton } from "@/components/platform/LoadingSkeleton";
 import { useChatLogs } from "@/hooks/useChatLogs";
+import type { SelectedMessage } from "@/components/escalations/TranscriptWithSelection";
+import { TranscriptWithSelection } from "@/components/escalations/TranscriptWithSelection";
+import { CreateKbFromChatLogButton } from "@/components/chat-logs/CreateKbFromChatLogButton";
 
 export default function ConversationDetailPage() {
   const { conversationId, env } = useParams<{ conversationId: string; env: string }>();
@@ -19,6 +22,7 @@ export default function ConversationDetailPage() {
   const { session } = useAuth();
   const isAuditor = session?.user.role === "Auditor";
   const [showRaw, setShowRaw] = useState(!isAuditor);
+  const [selectedMessages, setSelectedMessages] = useState<SelectedMessage[]>([]);
 
   const detail = getConversationDetail(tenantEnv, conversationId ?? "");
 
@@ -78,7 +82,19 @@ export default function ConversationDetailPage() {
 
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-medium text-foreground">Transcript</h2>
-          <PiiToggle showRaw={showRaw} onChange={setShowRaw} />
+          <div className="flex items-center gap-2">
+            {selectedMessages.length > 0 && (
+              <span className="text-[11px] text-muted-foreground">
+                {selectedMessages.length} selected
+              </span>
+            )}
+            <CreateKbFromChatLogButton
+              sessionId={resolvedSessionId ?? ""}
+              selectedMessages={selectedMessages}
+              onSuccess={() => setSelectedMessages([])}
+            />
+            <PiiToggle showRaw={showRaw} onChange={setShowRaw} />
+          </div>
         </div>
 
         <div className="rounded-lg border border-border bg-card p-4">
@@ -99,7 +115,13 @@ export default function ConversationDetailPage() {
                 </p>
               );
             }
-            return <TranscriptThread messages={messages} showRaw={showRaw} />;
+            return (
+              <TranscriptWithSelection
+                sessionId={resolvedSessionId ?? ""}
+                selectedMessages={selectedMessages}
+                onSelectionChange={setSelectedMessages}
+              />
+            );
           })()}
         </div>
       </div>
