@@ -10,6 +10,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import type { Role } from "@/lib/mock-api";
+import { useNavigate, useParams } from "react-router-dom";
 
 const CAN_SEE_FULL_SESSION: Role[] = ["SuperAdmin", "OpsManager"];
 type Filter = "all" | "positive" | "negative";
@@ -20,6 +21,16 @@ export function FeedbackTable() {
   const canSeeSession = CAN_SEE_FULL_SESSION.includes(role);
   const [filter, setFilter] = useState<Filter>("all");
   const [sortDesc, setSortDesc] = useState(true);
+  const navigate = useNavigate();
+  const { env } = useParams<{ env: string }>();
+
+  const handleRowClick = (ev: { citations: string[]; sessionId: string }) => {
+    if (ev.citations && ev.citations.length > 0) {
+      navigate(`/realx/${env}/train/kb/${ev.citations[0]}`);
+    } else {
+      navigate(`/realx/${env}/chat-logs?sessionId=${encodeURIComponent(ev.sessionId)}`);
+    }
+  };
 
   const { data: liveEvents, isLoading } = useFeedbackEvents();
   const allEvents = liveEvents && liveEvents.length > 0 ? liveEvents : getFeedbackEvents();
