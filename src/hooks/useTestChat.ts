@@ -174,37 +174,30 @@ export function useTestChat() {
   const pollForAgentMessages = useCallback(async () => {
     if (!client || !sessionIdRef.current) return;
     try {
-      const url = `${(client as any).endpoints.agentPoll}?sessionId=${encodeURIComponent(sessionIdRef.current)}&lastTurn=${lastTurnRef.current}`;
-      const res = await fetch(url, {
-        headers: { "x-chatbot-api-key": (client as any).cfg.agentKey },
-      });
-      if (!res.ok) return;
-      const agentMsgs: any[] = await res.json();
-      if (!Array.isArray(agentMsgs) || agentMsgs.length === 0) return;
+      const messages = await client.pollAgentMessages(
+        sessionIdRef.current + "&lastTurn=" + lastTurnRef.current
+      );
+      if (!Array.isArray(messages) || messages.length === 0) return;
 
-      const newAgentMessages = agentMsgs.filter(m => m.agent_message && m.turn > lastTurnRef.current);
+      const newAgentMessages = messages.filter(
+        (m: any) => m.agent_message && (m.turn ?? 0) > lastTurnRef.current
+      );
       if (newAgentMessages.length === 0) return;
 
-      const maxTurn = Math.max(...newAgentMessages.map(m => m.turn || 0));
+      const maxTurn = Math.max(...newAgentMessages.map((m: any) => m.turn ?? 0));
       lastTurnRef.current = maxTurn;
 
-      setMessages(prev => {
-        const newMsgs = newAgentMessages.map(m => ({
+      setMessages(prev => [
+        ...prev,
+        ...newAgentMessages.map((m: any) => ({
           id: crypto.randomUUID(),
           role: "bot" as const,
           text: `🧑‍💼 Agent: ${m.agent_message}`,
           sentAt: m.timestamp ?? new Date().toISOString(),
           feedback: null,
           meta: undefined,
-        }));
-        return [...prev, ...newMsgs];
-      });
-
-      // Show a toast notification so user knows agent replied
-      toast({
-        title: "Support Agent replied",
-        description: newAgentMessages[newAgentMessages.length - 1].agent_message.slice(0, 80),
-      });
+        })),
+      ]);
     } catch {
       // Silent fail — polling should never crash the chat
     }
