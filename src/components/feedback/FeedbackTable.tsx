@@ -10,6 +10,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import type { Role } from "@/lib/mock-api";
+import { useNavigate, useParams } from "react-router-dom";
 
 const CAN_SEE_FULL_SESSION: Role[] = ["SuperAdmin", "OpsManager"];
 type Filter = "all" | "positive" | "negative";
@@ -20,6 +21,16 @@ export function FeedbackTable() {
   const canSeeSession = CAN_SEE_FULL_SESSION.includes(role);
   const [filter, setFilter] = useState<Filter>("all");
   const [sortDesc, setSortDesc] = useState(true);
+  const navigate = useNavigate();
+  const { env } = useParams<{ env: string }>();
+
+  const handleRowClick = (ev: { citations: string[]; sessionId: string }) => {
+    if (ev.citations && ev.citations.length > 0) {
+      navigate(`/realx/${env}/train/kb/${ev.citations[0]}`);
+    } else {
+      navigate(`/realx/${env}/chat-logs?sessionId=${encodeURIComponent(ev.sessionId)}`);
+    }
+  };
 
   const { data: liveEvents, isLoading } = useFeedbackEvents();
   const allEvents = liveEvents && liveEvents.length > 0 ? liveEvents : getFeedbackEvents();
@@ -82,8 +93,12 @@ export function FeedbackTable() {
                         {canSeeSession ? ev.sessionId : ev.sessionId.slice(0, 10) + "…"}
                       </span>
                     </TableCell>
-                    <TableCell className="py-2 max-w-[200px]">
-                      <span className="text-xs truncate block">
+                    <TableCell
+                      className="py-2 max-w-[200px] cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => handleRowClick(ev)}
+                      title={ev.citations?.length > 0 ? "Click to view KB entry" : "Click to view chat session"}
+                    >
+                      <span className="text-xs truncate block underline-offset-2 hover:underline">
                         {ev.userMessage.slice(0, 60)}{ev.userMessage.length > 60 ? "…" : ""}
                       </span>
                     </TableCell>
