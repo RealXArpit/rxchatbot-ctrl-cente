@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Trash2, Bug, Send, ExternalLink, History } from "lucide-react";
+import { X, Square, Bug, Send, ExternalLink, History } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTenant } from "@/contexts/TenantContext";
 import { TestChatMessage } from "./TestChatMessage";
@@ -109,10 +109,10 @@ export function TestChatWindow({
           <Tooltip>
             <TooltipTrigger asChild>
               <button onClick={onClear} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                <Trash2 className="h-3.5 w-3.5" />
+                <Square className="h-3.5 w-3.5" />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Clear session</TooltipContent>
+            <TooltipContent side="bottom">Stop session</TooltipContent>
           </Tooltip>
           <button onClick={onClose} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
             <X className="h-4 w-4" />
@@ -140,6 +140,11 @@ export function TestChatWindow({
           </TooltipContent>
         </Tooltip>
       )}
+
+      {/* Note banner */}
+      <div className="px-3 py-1.5 text-[10px] text-amber-600 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-400 border-b border-border leading-snug">
+        Stop the session once you are done testing to maintain clean data.
+      </div>
 
       {/* Messages */}
       <div ref={listRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
