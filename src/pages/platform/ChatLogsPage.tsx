@@ -14,10 +14,12 @@ import { LiveDataBanner } from "@/components/chat-logs/LiveDataBanner";
 import { LoadingSkeleton } from "@/components/platform/LoadingSkeleton";
 import { ErrorPanel } from "@/components/platform/ErrorPanel";
 import { useChatLogs } from "@/hooks/useChatLogs";
-import { useLiveSessions } from "@/hooks/useLiveSessions";
+import { useLiveSessions, type LiveSession } from "@/hooks/useLiveSessions";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Timestamp } from "@/components/platform/Timestamp";
+import { LiveSessionInterventionDrawer } from "@/components/chat-logs/LiveSessionInterventionDrawer";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -60,6 +62,7 @@ export default function ChatLogsPage() {
   const [page, setPage] = useState(1);
   const [columns, setColumns] = useState<ColumnKey[]>(loadColumns);
   const pageSize = 25;
+  const [interventionSession, setInterventionSession] = useState<LiveSession | null>(null);
 
   const { data: liveData, isLoading, error, refetch } = useChatLogs();
   const { data: liveSessions, isLoading: sessionsLoading } = useLiveSessions();
@@ -156,11 +159,12 @@ export default function ChatLogsPage() {
                       <TableHead className="text-right">Avg Confidence</TableHead>
                       <TableHead>Last Active</TableHead>
                       <TableHead>Is Active</TableHead>
+                      <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {liveSessions.map((s) => (
-                      <TableRow key={s.id}>
+                      <TableRow key={s.id} className="hover:bg-muted/30">
                         <TableCell className="font-mono text-xs">{s.session_id.slice(0, 20)}{s.session_id.length > 20 ? "…" : ""}</TableCell>
                         <TableCell>{s.channel}</TableCell>
                         <TableCell className="max-w-[200px] truncate text-xs">{s.last_message}</TableCell>
@@ -172,6 +176,16 @@ export default function ChatLogsPage() {
                             {s.is_active ? "Active" : "Inactive"}
                           </Badge>
                         </TableCell>
+                        <TableCell>
+                          <Button
+                            size="sm"
+                            variant={s.is_active ? "default" : "outline"}
+                            className="text-xs h-7"
+                            onClick={() => setInterventionSession(s)}
+                          >
+                            {s.is_active ? "Intervene" : "View"}
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -180,6 +194,11 @@ export default function ChatLogsPage() {
             )}
           </TabsContent>
         </Tabs>
+
+        <LiveSessionInterventionDrawer
+          session={interventionSession}
+          onClose={() => setInterventionSession(null)}
+        />
       </div>
     </RequireRole>
   );
