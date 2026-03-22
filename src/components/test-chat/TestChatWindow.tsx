@@ -109,10 +109,10 @@ export function TestChatWindow({
           <Tooltip>
             <TooltipTrigger asChild>
               <button onClick={onClear} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                <Trash2 className="h-3.5 w-3.5" />
+                <Square className="h-3.5 w-3.5" />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="bottom">Clear session</TooltipContent>
+            <TooltipContent side="bottom">Stop session</TooltipContent>
           </Tooltip>
           <button onClick={onClose} className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
             <X className="h-4 w-4" />
