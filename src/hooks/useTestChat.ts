@@ -169,58 +169,6 @@ export function useTestChat() {
     }
   }, [client]);
 
-  const pollForAgentMessages = useCallback(async () => {
-    if (!client || !sessionIdRef.current) return;
-    try {
-      const messages = await client.pollAgentMessages(
-        sessionIdRef.current + "&lastTurn=" + lastTurnRef.current
-      );
-      if (!Array.isArray(messages) || messages.length === 0) return;
-
-      const newAgentMessages = messages.filter(
-        (m: any) => m.agent_message && (m.turn ?? 0) > lastTurnRef.current
-      );
-      if (newAgentMessages.length === 0) return;
-
-      const maxTurn = Math.max(...newAgentMessages.map((m: any) => m.turn ?? 0));
-      lastTurnRef.current = maxTurn;
-
-      setMessages(prev => [
-        ...prev,
-        ...newAgentMessages.map((m: any) => ({
-          id: crypto.randomUUID(),
-          role: "bot" as const,
-          text: `🧑‍💼 Agent: ${m.agent_message}`,
-          sentAt: m.timestamp ?? new Date().toISOString(),
-          feedback: null,
-          meta: undefined,
-        })),
-      ]);
-    } catch {
-      // Silent fail — polling should never crash the chat
-    }
-  }, [client]);
-
-  // Start polling when session has messages, stop when session is cleared
-  useEffect(() => {
-    if (messages.length > 0 && sessionIdRef.current) {
-      if (!pollingRef.current) {
-        pollingRef.current = setInterval(pollForAgentMessages, 6000);
-      }
-    } else {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-        lastTurnRef.current = 0;
-      }
-    }
-    return () => {
-      if (pollingRef.current) {
-        clearInterval(pollingRef.current);
-        pollingRef.current = null;
-      }
-    };
-  }, [messages.length, pollForAgentMessages]);
 
   const clearSession = useCallback(() => {
     clearStoredSessionId(env);
