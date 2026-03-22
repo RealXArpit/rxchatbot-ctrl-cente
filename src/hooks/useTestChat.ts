@@ -30,8 +30,6 @@ export function useTestChat() {
   const [isLoading, setIsLoading] = useState(false);
   const sessionIdRef = useRef<string>("");
   const prevEnvRef = useRef(env);
-  const lastTurnRef = useRef<number>(0);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Reset on env change
   useEffect(() => {
