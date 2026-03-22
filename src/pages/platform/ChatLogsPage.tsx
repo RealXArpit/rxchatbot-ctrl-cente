@@ -159,12 +159,11 @@ export default function ChatLogsPage() {
                       <TableHead className="text-right">Avg Confidence</TableHead>
                       <TableHead>Last Active</TableHead>
                       <TableHead>Is Active</TableHead>
-                      <TableHead></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {liveSessions.map((s) => (
-                      <TableRow key={s.id} className="hover:bg-muted/30">
+                      <TableRow key={s.id} className="hover:bg-muted/30 cursor-pointer" onClick={() => setInterventionSession(s)}>
                         <TableCell className="font-mono text-xs">{s.session_id.slice(0, 20)}{s.session_id.length > 20 ? "…" : ""}</TableCell>
                         <TableCell>{s.channel}</TableCell>
                         <TableCell className="max-w-[200px] truncate text-xs">{s.last_message}</TableCell>
@@ -175,16 +174,6 @@ export default function ChatLogsPage() {
                           <Badge variant={s.is_active ? "default" : "secondary"} className={s.is_active ? "bg-success text-success-foreground" : ""}>
                             {s.is_active ? "Active" : "Inactive"}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            size="sm"
-                            variant={s.is_active ? "default" : "outline"}
-                            className="text-xs h-7"
-                            onClick={() => setInterventionSession(s)}
-                          >
-                            {s.is_active ? "Intervene" : "View"}
-                          </Button>
                         </TableCell>
                       </TableRow>
                     ))}
