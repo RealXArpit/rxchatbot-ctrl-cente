@@ -151,7 +151,7 @@ export default function TrainPage() {
               <>
                 <KbTable items={pagedItems} isAuditor={isAuditor} curatedQuestions={curatedQuestions} startIndex={(page - 1) * PAGE_SIZE} />
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center justify-between pt-2 pr-36">
                     <span className="text-xs text-muted-foreground">
                       Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, items.length)} of {items.length}
                     </span>
