@@ -35,9 +35,10 @@ interface Props {
   items: KnowledgeBaseItem[];
   isAuditor?: boolean;
   curatedQuestions?: string[];
+  startIndex?: number;
 }
 
-export function KbTable({ items, isAuditor, curatedQuestions }: Props) {
+export function KbTable({ items, isAuditor, curatedQuestions, startIndex = 0 }: Props) {
   const navigate = useNavigate();
   const { env } = useParams<{ env: string }>();
 
