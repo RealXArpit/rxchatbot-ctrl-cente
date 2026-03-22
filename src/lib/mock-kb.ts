@@ -41,7 +41,23 @@ export interface TestbenchResult {
   finalAnswer: string;
 }
 
-const CATEGORIES = ["Basics", "Investments", "Legal", "Payments", "Account"];
+const CATEGORIES = [
+  "Basics",
+  "Account",
+  "Welcome & Overview",
+  "How It Works",
+  "Getting Started",
+  "Platform & Technology",
+  "Legal & Regulatory",
+  "Payments & Operations",
+  "Business & Partnerships",
+  "Support & Escalation",
+  "Advanced — Legal & Regulatory",
+  "Advanced — Technology & Blockchain",
+  "Advanced — Real Estate",
+  "Advanced — Distributors",
+  "Advanced — Financial & Institutional",
+];
 
 function makeItem(
   i: number, category: string, question: string, answer: string,
