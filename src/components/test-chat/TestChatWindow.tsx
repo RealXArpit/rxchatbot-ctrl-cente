@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { X, Trash2, Bug, Send, ExternalLink, History } from "lucide-react";
+import { X, Square, Bug, Send, ExternalLink, History } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTenant } from "@/contexts/TenantContext";
 import { TestChatMessage } from "./TestChatMessage";
