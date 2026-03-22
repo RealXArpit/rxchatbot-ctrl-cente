@@ -93,8 +93,12 @@ export function FeedbackTable() {
                         {canSeeSession ? ev.sessionId : ev.sessionId.slice(0, 10) + "…"}
                       </span>
                     </TableCell>
-                    <TableCell className="py-2 max-w-[200px]">
-                      <span className="text-xs truncate block">
+                    <TableCell
+                      className="py-2 max-w-[200px] cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => handleRowClick(ev)}
+                      title={ev.citations?.length > 0 ? "Click to view KB entry" : "Click to view chat session"}
+                    >
+                      <span className="text-xs truncate block underline-offset-2 hover:underline">
                         {ev.userMessage.slice(0, 60)}{ev.userMessage.length > 60 ? "…" : ""}
                       </span>
                     </TableCell>

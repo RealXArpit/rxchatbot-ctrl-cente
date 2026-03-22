@@ -1,18 +1,25 @@
 import { getKbFeedbackScores } from "@/lib/mock-feedback";
 import { useKbScores } from "@/hooks/useFeedback";
 import type { KbFeedbackScore } from "@/lib/mock-feedback";
+import { useNavigate, useParams } from "react-router-dom";
 
 export function KbScoreLeaderboard() {
   const { data: liveScores } = useKbScores();
+  const navigate = useNavigate();
+  const { env } = useParams<{ env: string }>();
   const scores = liveScores && liveScores.length > 0 ? liveScores : getKbFeedbackScores();
   const sorted = [...scores].sort((a, b) => b.feedbackScore - a.feedbackScore);
   const top5    = sorted.slice(0, 5);
   const bottom5 = sorted.length >= 5 ? sorted.slice(-5).reverse() : [...sorted].reverse();
 
   const Row = ({ item }: { item: KbFeedbackScore }) => (
-    <div className="flex items-center justify-between py-1.5 text-xs">
+    <div
+      className="flex items-center justify-between py-1.5 text-xs cursor-pointer hover:bg-muted/50 rounded-md px-1 -mx-1 transition-colors group"
+      onClick={() => navigate(`/realx/${env}/train/kb/${item.kbId}`)}
+      title="Click to edit this KB entry"
+    >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-foreground">{item.question}</p>
+        <p className="truncate text-foreground group-hover:text-primary transition-colors">{item.question}</p>
         <p className="text-[10px] text-muted-foreground">{item.category} · {item.useCount} uses</p>
       </div>
       <span className="tabular-nums font-medium ml-3 shrink-0">
