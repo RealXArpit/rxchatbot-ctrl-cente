@@ -173,11 +173,6 @@ export function useTestChat() {
   const clearSession = useCallback(() => {
     clearStoredSessionId(env);
     sessionIdRef.current = "";
-    lastTurnRef.current = 0;
-    if (pollingRef.current) {
-      clearInterval(pollingRef.current);
-      pollingRef.current = null;
-    }
     setMessages([]);
   }, [env]);
 
