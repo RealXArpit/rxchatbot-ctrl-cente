@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Plus, FlaskConical, FileText, LayoutList, LayoutGrid, BookCheck } from "lucide-react";
@@ -42,6 +42,84 @@ function mapLiveRow(row: any): KnowledgeBaseItem {
   };
 }
 
+function KbPaginationBar({
+  page, totalPages, pageSize, totalItems,
+  onPageChange, onPageSizeChange,
+}: {
+  page: number; totalPages: number; pageSize: number; totalItems: number;
+  onPageChange: (p: number) => void; onPageSizeChange: (s: number) => void;
+}) {
+  if (totalItems === 0) return null;
+
+  const getPages = (): (number | "...")[] => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages: (number | "...")[] = [];
+    const add = (n: number) => { if (!pages.includes(n)) pages.push(n); };
+    add(1);
+    if (page > 3) pages.push("...");
+    if (page > 2) add(page - 1);
+    add(page);
+    if (page < totalPages - 1) add(page + 1);
+    if (page < totalPages - 2) pages.push("...");
+    add(totalPages);
+    return pages;
+  };
+
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, totalItems);
+
+  return (
+    <div className="flex items-center justify-between flex-wrap gap-2 py-1 pr-36">
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {from}–{to} of {totalItems}
+        </span>
+        <select
+          value={pageSize}
+          onChange={e => onPageSizeChange(Number(e.target.value))}
+          className="h-7 rounded-md border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        >
+          {[10, 25, 50, 100].map(s => (
+            <option key={s} value={s}>{s} / page</option>
+          ))}
+        </select>
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => onPageChange(page - 1)}
+            disabled={page === 1}
+            className="h-7 w-7 rounded-md border border-input text-xs flex items-center justify-center disabled:opacity-40 hover:bg-muted transition-colors"
+          >‹</button>
+
+          {getPages().map((p, i) =>
+            p === "..." ? (
+              <span key={`ellipsis-${i}`} className="h-7 w-7 flex items-center justify-center text-xs text-muted-foreground">…</span>
+            ) : (
+              <button
+                key={p}
+                onClick={() => onPageChange(p as number)}
+                className={`h-7 w-7 rounded-md border text-xs flex items-center justify-center transition-colors ${
+                  p === page
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "border-input hover:bg-muted"
+                }`}
+              >{p}</button>
+            )
+          )}
+
+          <button
+            onClick={() => onPageChange(page + 1)}
+            disabled={page === totalPages}
+            className="h-7 w-7 rounded-md border border-input text-xs flex items-center justify-center disabled:opacity-40 hover:bg-muted transition-colors"
+          >›</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TrainPage() {
   const { env } = useParams<{ env: string }>();
   const navigate = useNavigate();
@@ -52,8 +130,16 @@ export default function TrainPage() {
 
   const [tab, setTab] = useState("kb");
   const [filters, setFilters] = useState<KbFilterState>({ q: "", status: "", category: "" });
-  const PAGE_SIZE = 20;
-  const [page, setPage] = useState(1);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+  const pageSize = [10, 25, 50, 100].includes(parseInt(searchParams.get("size") ?? "25", 10))
+    ? parseInt(searchParams.get("size") ?? "25", 10)
+    : 25;
+
+  const setPage = (p: number) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("page", String(p)); return n; }, { replace: true });
+  const setPageSize = (s: number) => setSearchParams(prev => { const n = new URLSearchParams(prev); n.set("size", String(s)); n.set("page", "1"); return n; }, { replace: true });
+
   const [kbView, setKbView] = useState<"list" | "cards">(() => {
     return (localStorage.getItem("rxchat_kb_view") as "list" | "cards") ?? "list";
   });
@@ -87,8 +173,8 @@ export default function TrainPage() {
 
   useEffect(() => { setPage(1); }, [filters]);
 
-  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
-  const pagedItems = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const pagedItems = items.slice((page - 1) * pageSize, page * pageSize);
 
   if (isLoading) {
     return (
@@ -149,33 +235,18 @@ export default function TrainPage() {
             <KbFiltersBar filters={filters} onChange={setFilters} />
             {kbView === "list" ? (
               <>
-                <KbTable items={pagedItems} isAuditor={isAuditor} curatedQuestions={curatedQuestions} startIndex={(page - 1) * PAGE_SIZE} />
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-between pt-2 pr-36">
-                    <span className="text-xs text-muted-foreground">
-                      Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, items.length)} of {items.length}
-                    </span>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="outline" size="sm" className="h-7 text-xs"
-                        disabled={page === 1}
-                        onClick={() => setPage(p => p - 1)}
-                      >Previous</Button>
-                      <span className="text-xs text-muted-foreground px-2">{page} / {totalPages}</span>
-                      <Button
-                        variant="outline" size="sm" className="h-7 text-xs"
-                        disabled={page === totalPages}
-                        onClick={() => setPage(p => p + 1)}
-                      >Next</Button>
-                    </div>
-                  </div>
-                )}
+                <KbPaginationBar
+                  page={page} totalPages={totalPages} pageSize={pageSize} totalItems={items.length}
+                  onPageChange={setPage} onPageSizeChange={setPageSize}
+                />
+                <KbTable items={pagedItems} isAuditor={isAuditor} curatedQuestions={curatedQuestions} startIndex={(page - 1) * pageSize} />
+                <KbPaginationBar
+                  page={page} totalPages={totalPages} pageSize={pageSize} totalItems={items.length}
+                  onPageChange={setPage} onPageSizeChange={setPageSize}
+                />
               </>
             ) : (
-              <KbCardView
-                items={items}
-                onClearFilters={() => setFilters({ q: "", status: "", category: "" })}
-              />
+              <KbCardView items={items} onClearFilters={() => setFilters({ q: "", status: "", category: "" })} />
             )}
           </TabsContent>
 
