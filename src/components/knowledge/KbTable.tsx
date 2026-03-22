@@ -64,13 +64,13 @@ export function KbTable({ items, isAuditor, curatedQuestions, startIndex = 0 }: 
         </TableRow>
       </TableHeader>
       <TableBody>
-        {items.map((item) => (
+        {items.map((item, index) => (
           <TableRow
             key={item.id}
             className="cursor-pointer"
             onClick={() => navigate(`/realx/${env}/train/kb/${item.id}`)}
           >
-            <TableCell className="font-mono text-xs">{item.id}</TableCell>
+            <TableCell className="text-xs text-muted-foreground tabular-nums">{startIndex + index + 1}</TableCell>
             <TableCell className="text-xs">{item.category}</TableCell>
             <TableCell className="text-xs max-w-xs truncate">{item.question}</TableCell>
             {!isAuditor && <TableCell className="text-xs max-w-xs truncate hidden lg:table-cell text-muted-foreground">{item.answer}</TableCell>}

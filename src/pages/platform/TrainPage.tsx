@@ -148,7 +148,29 @@ export default function TrainPage() {
           <TabsContent value="kb" className="space-y-3">
             <KbFiltersBar filters={filters} onChange={setFilters} />
             {kbView === "list" ? (
-              <KbTable items={items} isAuditor={isAuditor} curatedQuestions={curatedQuestions} />
+              <>
+                <KbTable items={pagedItems} isAuditor={isAuditor} curatedQuestions={curatedQuestions} startIndex={(page - 1) * PAGE_SIZE} />
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-xs text-muted-foreground">
+                      Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, items.length)} of {items.length}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline" size="sm" className="h-7 text-xs"
+                        disabled={page === 1}
+                        onClick={() => setPage(p => p - 1)}
+                      >Previous</Button>
+                      <span className="text-xs text-muted-foreground px-2">{page} / {totalPages}</span>
+                      <Button
+                        variant="outline" size="sm" className="h-7 text-xs"
+                        disabled={page === totalPages}
+                        onClick={() => setPage(p => p + 1)}
+                      >Next</Button>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <KbCardView
                 items={items}
