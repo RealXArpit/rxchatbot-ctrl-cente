@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,8 @@ export default function TrainPage() {
 
   const [tab, setTab] = useState("kb");
   const [filters, setFilters] = useState<KbFilterState>({ q: "", status: "", category: "" });
+  const PAGE_SIZE = 20;
+  const [page, setPage] = useState(1);
   const [kbView, setKbView] = useState<"list" | "cards">(() => {
     return (localStorage.getItem("rxchat_kb_view") as "list" | "cards") ?? "list";
   });
@@ -82,6 +84,11 @@ export default function TrainPage() {
       return true;
     });
   }, [env, filters, liveData]);
+
+  useEffect(() => { setPage(1); }, [filters]);
+
+  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const pagedItems = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   if (isLoading) {
     return (
@@ -141,7 +148,29 @@ export default function TrainPage() {
           <TabsContent value="kb" className="space-y-3">
             <KbFiltersBar filters={filters} onChange={setFilters} />
             {kbView === "list" ? (
-              <KbTable items={items} isAuditor={isAuditor} curatedQuestions={curatedQuestions} />
+              <>
+                <KbTable items={pagedItems} isAuditor={isAuditor} curatedQuestions={curatedQuestions} startIndex={(page - 1) * PAGE_SIZE} />
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-xs text-muted-foreground">
+                      Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, items.length)} of {items.length}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline" size="sm" className="h-7 text-xs"
+                        disabled={page === 1}
+                        onClick={() => setPage(p => p - 1)}
+                      >Previous</Button>
+                      <span className="text-xs text-muted-foreground px-2">{page} / {totalPages}</span>
+                      <Button
+                        variant="outline" size="sm" className="h-7 text-xs"
+                        disabled={page === totalPages}
+                        onClick={() => setPage(p => p + 1)}
+                      >Next</Button>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <KbCardView
                 items={items}

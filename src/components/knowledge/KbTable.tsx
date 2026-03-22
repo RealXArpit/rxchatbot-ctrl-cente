@@ -35,9 +35,10 @@ interface Props {
   items: KnowledgeBaseItem[];
   isAuditor?: boolean;
   curatedQuestions?: string[];
+  startIndex?: number;
 }
 
-export function KbTable({ items, isAuditor, curatedQuestions }: Props) {
+export function KbTable({ items, isAuditor, curatedQuestions, startIndex = 0 }: Props) {
   const navigate = useNavigate();
   const { env } = useParams<{ env: string }>();
 
@@ -53,7 +54,7 @@ export function KbTable({ items, isAuditor, curatedQuestions }: Props) {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="w-20">ID</TableHead>
+          <TableHead className="w-12">#</TableHead>
           <TableHead className="w-24">Category</TableHead>
           <TableHead>Question</TableHead>
           {!isAuditor && <TableHead className="hidden lg:table-cell">Answer</TableHead>}
@@ -63,13 +64,13 @@ export function KbTable({ items, isAuditor, curatedQuestions }: Props) {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {items.map((item) => (
+        {items.map((item, index) => (
           <TableRow
             key={item.id}
             className="cursor-pointer"
             onClick={() => navigate(`/realx/${env}/train/kb/${item.id}`)}
           >
-            <TableCell className="font-mono text-xs">{item.id}</TableCell>
+            <TableCell className="text-xs text-muted-foreground tabular-nums">{startIndex + index + 1}</TableCell>
             <TableCell className="text-xs">{item.category}</TableCell>
             <TableCell className="text-xs max-w-xs truncate">{item.question}</TableCell>
             {!isAuditor && <TableCell className="text-xs max-w-xs truncate hidden lg:table-cell text-muted-foreground">{item.answer}</TableCell>}
