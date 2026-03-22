@@ -85,6 +85,11 @@ export default function TrainPage() {
     });
   }, [env, filters, liveData]);
 
+  useEffect(() => { setPage(1); }, [filters]);
+
+  const totalPages = Math.max(1, Math.ceil(items.length / PAGE_SIZE));
+  const pagedItems = items.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   if (isLoading) {
     return (
       <div>
