@@ -101,7 +101,6 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
       toast.error("Failed to end takeover");
     } finally {
       setIsTakeover(false);
-      setOptimisticMessages([]);
       setMessage("");
       setSendError(null);
       setEndingTakeover(false);
