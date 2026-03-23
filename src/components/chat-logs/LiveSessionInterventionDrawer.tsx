@@ -27,12 +27,12 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
   const [endingTakeover, setEndingTakeover] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const { data: serverMessages, dataUpdatedAt } = useSessionTranscript(session?.session_id);
+  const { data: messages, dataUpdatedAt, refetch } = useSessionTranscript(session?.session_id);
 
   // Auto-scroll on new data
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [dataUpdatedAt, optimisticMessages.length]);
+  }, [dataUpdatedAt]);
 
   // Reset state on close
   const handleClose = () => {
