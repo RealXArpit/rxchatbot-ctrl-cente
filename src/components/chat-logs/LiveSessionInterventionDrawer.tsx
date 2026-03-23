@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import type { LiveSession } from "@/hooks/useLiveSessions";
 import { formatDistanceToNow } from "date-fns";
-import type { Message } from "@/lib/mock-conversations";
 
 interface Props {
   session: LiveSession | null;
