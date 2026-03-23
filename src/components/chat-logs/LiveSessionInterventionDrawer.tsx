@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import type { LiveSession } from "@/hooks/useLiveSessions";
 import { formatDistanceToNow } from "date-fns";
-import type { Message } from "@/lib/mock-conversations";
 
 interface Props {
   session: LiveSession | null;
@@ -22,24 +21,22 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
   const { session: authSession } = useAuth();
 
   const [isTakeover, setIsTakeover] = useState(false);
-  const [optimisticMessages, setOptimisticMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [endingTakeover, setEndingTakeover] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const { data: serverMessages, dataUpdatedAt } = useSessionTranscript(session?.session_id);
+  const { data: messages, dataUpdatedAt, refetch } = useSessionTranscript(session?.session_id);
 
   // Auto-scroll on new data
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [dataUpdatedAt, optimisticMessages.length]);
+  }, [dataUpdatedAt]);
 
   // Reset state on close
   const handleClose = () => {
     setIsTakeover(false);
-    setOptimisticMessages([]);
     setMessage("");
     setSendError(null);
     setSending(false);
@@ -47,15 +44,7 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
     onClose();
   };
 
-  // Merge server + optimistic, deduplicate by id, sort by createdAt
-  const allMessages = useMemo(() => {
-    const serverIds = new Set((serverMessages ?? []).map((m) => m.id));
-    const merged = [
-      ...(serverMessages ?? []),
-      ...optimisticMessages.filter((m) => !serverIds.has(m.id)),
-    ];
-    return merged.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-  }, [serverMessages, optimisticMessages]);
+  const allMessages = messages ?? [];
 
   const isStale = session
     ? Date.now() - new Date(session.last_message_at).getTime() > 10 * 60 * 1000
@@ -80,22 +69,8 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
         agentMessage: trimmed,
         operation: "REPLY",
       });
-      // Optimistic append
-      setOptimisticMessages((prev) => [
-        ...prev,
-        {
-          id: `opt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          conversationId: session.session_id,
-          role: "agent" as const,
-          text: trimmed,
-          textRedacted: trimmed,
-          createdAt: new Date().toISOString(),
-          piiRedacted: false,
-          feedback: null,
-          adminReferenceAnswer: null,
-        },
-      ]);
       setMessage("");
+      refetch();
     } catch {
       setSendError("Failed to send — check that the Agent Intervention workflow is Published in n8n");
     } finally {
@@ -118,7 +93,6 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
       toast.error("Failed to end takeover");
     } finally {
       setIsTakeover(false);
-      setOptimisticMessages([]);
       setMessage("");
       setSendError(null);
       setEndingTakeover(false);
