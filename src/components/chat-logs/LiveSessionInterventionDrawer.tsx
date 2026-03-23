@@ -37,7 +37,6 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
   // Reset state on close
   const handleClose = () => {
     setIsTakeover(false);
-    setOptimisticMessages([]);
     setMessage("");
     setSendError(null);
     setSending(false);
