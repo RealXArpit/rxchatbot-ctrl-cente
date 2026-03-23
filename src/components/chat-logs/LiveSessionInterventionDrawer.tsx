@@ -77,22 +77,8 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
         agentMessage: trimmed,
         operation: "REPLY",
       });
-      // Optimistic append
-      setOptimisticMessages((prev) => [
-        ...prev,
-        {
-          id: `opt_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-          conversationId: session.session_id,
-          role: "agent" as const,
-          text: trimmed,
-          textRedacted: trimmed,
-          createdAt: new Date().toISOString(),
-          piiRedacted: false,
-          feedback: null,
-          adminReferenceAnswer: null,
-        },
-      ]);
       setMessage("");
+      refetch();
     } catch {
       setSendError("Failed to send — check that the Agent Intervention workflow is Published in n8n");
     } finally {
