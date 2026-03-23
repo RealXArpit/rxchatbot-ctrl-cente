@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MonitoringKpiPanel } from "@/components/monitoring/MonitoringKpiPanel";
 import { MetricsExplorer } from "@/components/monitoring/MetricsExplorer";
+import { InsightPanel } from "@/components/monitoring/InsightPanel";
 import { AlertRulesTable } from "@/components/monitoring/AlertRulesTable";
 import { AlertRuleEditor } from "@/components/monitoring/AlertRuleEditor";
 import { AlertEventsTable } from "@/components/monitoring/AlertEventsTable";
@@ -97,6 +98,7 @@ export default function MonitoringPage() {
         <TabsContent value="overview" className="space-y-6">
           <MonitoringKpiPanel />
           <MetricsExplorer />
+          <InsightPanel />
         </TabsContent>
 
         <TabsContent value="alerts">
