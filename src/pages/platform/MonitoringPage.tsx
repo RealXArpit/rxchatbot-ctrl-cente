@@ -98,6 +98,7 @@ export default function MonitoringPage() {
         <TabsContent value="overview" className="space-y-6">
           <MonitoringKpiPanel />
           <MetricsExplorer />
+          <InsightPanel />
         </TabsContent>
 
         <TabsContent value="alerts">
