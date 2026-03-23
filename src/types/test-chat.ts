@@ -1,6 +1,6 @@
 export interface TestChatMessage {
   id: string;
-  role: "user" | "bot" | "error";
+  role: "user" | "bot" | "agent" | "error";
   text: string;
   sentAt: string;
   meta?: {
