@@ -21,7 +21,6 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
   const { session: authSession } = useAuth();
 
   const [isTakeover, setIsTakeover] = useState(false);
-  const [optimisticMessages, setOptimisticMessages] = useState<Message[]>([]);
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
