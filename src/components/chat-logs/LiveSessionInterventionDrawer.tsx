@@ -44,15 +44,7 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
     onClose();
   };
 
-  // Merge server + optimistic, deduplicate by id, sort by createdAt
-  const allMessages = useMemo(() => {
-    const serverIds = new Set((serverMessages ?? []).map((m) => m.id));
-    const merged = [
-      ...(serverMessages ?? []),
-      ...optimisticMessages.filter((m) => !serverIds.has(m.id)),
-    ];
-    return merged.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-  }, [serverMessages, optimisticMessages]);
+  const allMessages = messages ?? [];
 
   const isStale = session
     ? Date.now() - new Date(session.last_message_at).getTime() > 10 * 60 * 1000
