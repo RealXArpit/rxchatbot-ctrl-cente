@@ -1,11 +1,12 @@
 import { useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, RotateCcw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/platform/PageHeader";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenant } from "@/contexts/TenantContext";
 import {
   getEscalationById, assignTicket, addNote, addReply, resolveTicket,
   type EscalationTicket,
@@ -16,11 +17,9 @@ import { SlaTimer } from "@/components/escalations/SlaTimer";
 import { AssignmentPanel } from "@/components/escalations/AssignmentPanel";
 import { InternalNotes } from "@/components/escalations/InternalNotes";
 import { ResolutionForm } from "@/components/escalations/ResolutionForm";
-import { TakeoverShell } from "@/components/escalations/TakeoverShell";
 import { CreateKbFromTicketButton } from "@/components/escalations/CreateKbFromTicketButton";
 import { TranscriptWithSelection, type SelectedMessage } from "@/components/escalations/TranscriptWithSelection";
 import { AgentReplyForm } from "@/components/escalations/AgentReplyForm";
-import { AgentPollBanner } from "@/components/escalations/AgentPollBanner";
 import { toast } from "sonner";
 import type { Role } from "@/lib/mock-api";
 
