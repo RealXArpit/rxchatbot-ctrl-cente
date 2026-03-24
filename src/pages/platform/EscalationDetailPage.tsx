@@ -118,9 +118,27 @@ export default function EscalationDetailPage() {
   };
 
   const handleAgentSuccess = (op: string) => {
-    setLastSent(new Date());
     if (op === "RESOLVE") {
       handleResolve("Resolved via agent intervention", "RESOLVED");
+    }
+  };
+
+  const handleEndTakeover = async () => {
+    if (!client || !session || !ticket) return;
+    setEndingTakeover(true);
+    try {
+      await client.agentIntervene({
+        sessionId: ticket.sessionId,
+        agentId: session.user.id,
+        agentMessage: '',
+        operation: 'END_TAKEOVER',
+        ticketId: ticket.id,
+      });
+      toast.success("Bot has resumed control of this session");
+    } catch {
+      toast.error("Failed to end takeover");
+    } finally {
+      setEndingTakeover(false);
     }
   };
 
