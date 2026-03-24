@@ -6,7 +6,8 @@ import { UserMenu } from "./UserMenu";
 import { RoleBadge } from "./RoleBadge";
 import { SecurityBanner } from "./SecurityBanner";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
+import { Bell, Sun, Moon } from "lucide-react";
 
 export function TopBar() {
   const { session } = useAuth();
