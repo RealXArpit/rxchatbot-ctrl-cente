@@ -168,6 +168,13 @@ export function useTestChat() {
         userMessage: text.trim(),
       });
 
+      // Silent takeover — bot is suppressed, agent is handling this
+      if (!res.answer || res.answer.trim() === "") {
+        setMessages((prev) => prev.slice(0, -1)); // Remove the loading bubble
+        setIsLoading(false);
+        return;
+      }
+
       const botMsg: TestChatMessage = {
         id: crypto.randomUUID(),
         role: "bot",
