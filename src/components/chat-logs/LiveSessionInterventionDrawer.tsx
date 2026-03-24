@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, AlertTriangle, Zap } from "lucide-react";
-import { useSessionTranscript } from "@/hooks/useSessionTranscript";
+import { supabase } from "@/lib/supabase";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -14,6 +14,14 @@ import { formatDistanceToNow } from "date-fns";
 interface Props {
   session: LiveSession | null;
   onClose: () => void;
+}
+
+function mapRole(role: string): "user" | "bot" | "agent" | null {
+  if (role === "user") return "user";
+  if (role === "assistant") return "bot";
+  if (role === "agent") return "agent";
+  if (role === "system") return null;
+  return "bot";
 }
 
 export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
@@ -27,12 +35,51 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
   const [endingTakeover, setEndingTakeover] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const { data: messages, dataUpdatedAt, refetch } = useSessionTranscript(session?.session_id);
+  const [realtimeMessages, setRealtimeMessages] = useState<any[]>([]);
+  const seenIds = useRef<Set<string>>(new Set());
 
-  // Auto-scroll on new data
+  // Initial load
+  useEffect(() => {
+    if (!session?.session_id) return;
+    seenIds.current.clear();
+    setRealtimeMessages([]);
+    supabase
+      .from('sessions')
+      .select('id, session_id, role, message, turn, timestamp')
+      .eq('session_id', session.session_id)
+      .order('turn', { ascending: true })
+      .then(({ data }) => {
+        if (data) {
+          data.forEach(r => seenIds.current.add(r.id));
+          setRealtimeMessages(data);
+        }
+      });
+  }, [session?.session_id]);
+
+  // Realtime subscription
+  useEffect(() => {
+    if (!session?.session_id) return;
+    const channel = supabase
+      .channel(`drawer-${session.session_id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'sessions',
+        filter: `session_id=eq.${session.session_id}`,
+      }, (payload) => {
+        const row = payload.new as any;
+        if (seenIds.current.has(row.id)) return;
+        seenIds.current.add(row.id);
+        setRealtimeMessages(prev => [...prev, row]);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [session?.session_id]);
+
+  // Auto-scroll on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [dataUpdatedAt]);
+  }, [realtimeMessages.length]);
 
   // Reset state on close
   const handleClose = () => {
@@ -41,10 +88,24 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
     setSendError(null);
     setSending(false);
     setEndingTakeover(false);
+    setRealtimeMessages([]);
+    seenIds.current.clear();
     onClose();
   };
 
-  const allMessages = messages ?? [];
+  const allMessages = realtimeMessages
+    .filter(row => typeof row.message === 'string' && row.message.trim().length > 0)
+    .map((row, i) => {
+      const mappedRole = mapRole(row.role);
+      if (!mappedRole) return null;
+      return {
+        id: row.id ?? `msg_${i}`,
+        role: mappedRole,
+        text: row.message,
+        createdAt: row.timestamp ?? new Date().toISOString(),
+      };
+    })
+    .filter(Boolean) as { id: string; role: "user" | "bot" | "agent"; text: string; createdAt: string }[];
 
   const isStale = session
     ? Date.now() - new Date(session.last_message_at).getTime() > 10 * 60 * 1000
@@ -70,7 +131,6 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
         operation: "REPLY",
       });
       setMessage("");
-      refetch();
     } catch {
       setSendError("Failed to send — check that the Agent Intervention workflow is Published in n8n");
     } finally {
@@ -103,14 +163,12 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
     user: "ml-auto bg-primary text-primary-foreground rounded-2xl rounded-br-sm",
     bot: "mr-auto bg-muted text-muted-foreground rounded-2xl rounded-bl-sm",
     agent: "mr-auto bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 rounded-2xl rounded-bl-sm",
-    assistant: "mr-auto bg-muted text-muted-foreground rounded-2xl rounded-bl-sm",
   };
 
   const roleLabel: Record<string, string> = {
     user: "User",
     bot: "Bot",
     agent: "Agent",
-    assistant: "Bot",
   };
 
   return (
@@ -176,7 +234,6 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
         {/* Bottom area */}
         <div className="shrink-0 border-t border-border px-4 py-3">
           {!isTakeover ? (
-            /* Stage 1: Observation — Take Over button */
             <div className="flex flex-col items-center gap-2">
               {isActive && (
                 <>
@@ -196,7 +253,6 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
               )}
             </div>
           ) : (
-            /* Stage 2: Intervention — Reply area */
             <div className="space-y-2">
               <Textarea
                 placeholder="Type a reply to send directly into the user's chat…"
