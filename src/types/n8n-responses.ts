@@ -78,6 +78,6 @@ export interface AgentMessage {
   session_id: string;
   agent_id: string;
   agent_message: string;
-  intervention_type: "REPLY" | "TAKEOVER" | "RESOLVE";
+  intervention_type: "REPLY" | "TAKEOVER" | "RESOLVE" | "END_TAKEOVER";
   timestamp: string;
 }
