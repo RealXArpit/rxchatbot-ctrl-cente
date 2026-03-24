@@ -31,6 +31,8 @@ export function useTestChat() {
   const [isLoading, setIsLoading] = useState(false);
   const sessionIdRef = useRef<string>("");
   const prevEnvRef = useRef(env);
+  const realtimeChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const seenAgentMessageIds = useRef<Set<string>>(new Set());
 
   // Reset on env change
   useEffect(() => {
