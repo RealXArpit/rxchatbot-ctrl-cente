@@ -226,6 +226,11 @@ export function useTestChat() {
 
 
   const clearSession = useCallback(() => {
+    if (realtimeChannelRef.current) {
+      supabase.removeChannel(realtimeChannelRef.current);
+      realtimeChannelRef.current = null;
+    }
+    seenAgentMessageIds.current.clear();
     clearStoredSessionId(env);
     sessionIdRef.current = "";
     setMessages([]);
