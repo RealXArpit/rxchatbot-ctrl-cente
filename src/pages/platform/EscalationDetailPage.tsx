@@ -213,22 +213,24 @@ export default function EscalationDetailPage() {
             onSelectionChange={setSelectedMessages}
           />
 
-          <TakeoverShell
-            replies={ticket.replies}
-            onReply={handleReply}
-            readOnly={isAuditor || !canReply}
-            sessionId={ticket.sessionId}
-            ticketId={ticket.id}
-          />
-
-          {lastSent && <AgentPollBanner sessionId={ticket.sessionId} sentAt={lastSent} />}
-
           {canReply && ticket.status !== "RESOLVED" && ticket.status !== "CLOSED" && (
             <AgentReplyForm
               ticketId={ticket.id}
               sessionId={ticket.sessionId}
               onSuccess={handleAgentSuccess}
             />
+          )}
+
+          {canReply && ticket.status !== "RESOLVED" && ticket.status !== "CLOSED" && (
+            <Button
+              variant="outline"
+              onClick={handleEndTakeover}
+              disabled={endingTakeover}
+              className="w-full gap-2"
+            >
+              {endingTakeover ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+              End Takeover — Return to Bot
+            </Button>
           )}
 
           <InternalNotes notes={ticket.notes} onAdd={handleAddNote} readOnly={isAuditor} />
