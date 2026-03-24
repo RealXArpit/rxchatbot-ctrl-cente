@@ -37,7 +37,7 @@ export interface AgentInterventionRequest {
   sessionId: string;
   agentId: string;
   agentMessage: string;
-  operation: "REPLY" | "TAKEOVER" | "RESOLVE";
+  operation: "REPLY" | "TAKEOVER" | "RESOLVE" | "END_TAKEOVER";
   resolutionNote?: string;
   ticketId?: string;
 }
