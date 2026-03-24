@@ -11,6 +11,7 @@ import { Bell, Sun, Moon } from "lucide-react";
 
 export function TopBar() {
   const { session } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="shrink-0">
