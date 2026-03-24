@@ -90,42 +90,54 @@ export function MonitoringKpiPanel() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <TelemetryGauge
-          label="Containment"
-          value={`${Math.round(k.containmentRate * 100)}%`}
-          subtitle="Bot resolved without human help"
-          status={k.containmentRate >= 0.7 ? "success" : "warning"}
-        />
-        <TelemetryGauge
-          label="Escalation"
-          value={`${Math.round(k.escalationRate * 100)}%`}
-          subtitle="Handed to human agent"
-          status={k.escalationRate > 0.25 ? "warning" : "success"}
-        />
-        <TelemetryGauge
-          label="Cache Hit"
-          value={`${Math.round(k.cacheHitRate * 100)}%`}
-          subtitle="Answered from memory, no AI call"
-          status={k.cacheHitRate >= 0.3 ? "success" : "warning"}
-        />
-        <TelemetryGauge
-          label="P0 SLA Met"
-          value={`${Math.round(k.p0SlaFirstResponse * 100)}%`}
-          subtitle="Critical — response within 5 min"
-          status={k.p0SlaFirstResponse >= 0.9 ? "success" : "danger"}
-        />
-        <TelemetryGauge
-          label="P1 SLA Met"
-          value={`${Math.round(k.p1SlaFirstResponse * 100)}%`}
-          subtitle="High — response within 60 min"
-          status={k.p1SlaFirstResponse >= 0.85 ? "success" : "warning"}
-        />
-        <TelemetryGauge
-          label="P2 SLA Met"
-          value={`${Math.round(k.p2SlaFirstResponse * 100)}%`}
-          subtitle="Standard — response within 4 hours"
-          status={k.p2SlaFirstResponse >= 0.9 ? "success" : "warning"}
-        />
+        <div className="dark:border-t-[1.5px] dark:border-t-[color:hsl(var(--success))]">
+          <TelemetryGauge
+            label="Containment"
+            value={`${Math.round(k.containmentRate * 100)}%`}
+            subtitle="Bot resolved without human help"
+            status={k.containmentRate >= 0.7 ? "success" : "warning"}
+          />
+        </div>
+        <div className={`dark:border-t-[1.5px] ${k.escalationRate > 0.25 ? "dark:border-t-[color:hsl(var(--warning))]" : "dark:border-t-[color:hsl(var(--success))]"}`}>
+          <TelemetryGauge
+            label="Escalation"
+            value={`${Math.round(k.escalationRate * 100)}%`}
+            subtitle="Handed to human agent"
+            status={k.escalationRate > 0.25 ? "warning" : "success"}
+          />
+        </div>
+        <div className="dark:border-t-[1.5px] dark:border-t-[color:hsl(var(--success))]">
+          <TelemetryGauge
+            label="Cache Hit"
+            value={`${Math.round(k.cacheHitRate * 100)}%`}
+            subtitle="Answered from memory, no AI call"
+            status={k.cacheHitRate >= 0.3 ? "success" : "warning"}
+          />
+        </div>
+        <div className={`dark:border-t-[1.5px] ${k.p0SlaFirstResponse >= 0.9 ? "dark:border-t-[color:hsl(var(--success))]" : "dark:border-t-[color:hsl(var(--destructive))]"}`}>
+          <TelemetryGauge
+            label="P0 SLA Met"
+            value={`${Math.round(k.p0SlaFirstResponse * 100)}%`}
+            subtitle="Critical — response within 5 min"
+            status={k.p0SlaFirstResponse >= 0.9 ? "success" : "danger"}
+          />
+        </div>
+        <div className={`dark:border-t-[1.5px] ${k.p1SlaFirstResponse >= 0.85 ? "dark:border-t-[color:hsl(var(--success))]" : "dark:border-t-[color:hsl(var(--warning))]"}`}>
+          <TelemetryGauge
+            label="P1 SLA Met"
+            value={`${Math.round(k.p1SlaFirstResponse * 100)}%`}
+            subtitle="High — response within 60 min"
+            status={k.p1SlaFirstResponse >= 0.85 ? "success" : "warning"}
+          />
+        </div>
+        <div className={`dark:border-t-[1.5px] ${k.p2SlaFirstResponse >= 0.9 ? "dark:border-t-[color:hsl(var(--success))]" : "dark:border-t-[color:hsl(var(--warning))]"}`}>
+          <TelemetryGauge
+            label="P2 SLA Met"
+            value={`${Math.round(k.p2SlaFirstResponse * 100)}%`}
+            subtitle="Standard — response within 4 hours"
+            status={k.p2SlaFirstResponse >= 0.9 ? "success" : "warning"}
+          />
+        </div>
       </div>
     </div>
   );
