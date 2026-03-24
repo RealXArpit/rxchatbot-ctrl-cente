@@ -43,6 +43,58 @@ export function useTestChat() {
     }
   }, [env]);
 
+  useEffect(() => {
+    const sid = sessionIdRef.current;
+    if (!sid || messages.length === 0) {
+      if (realtimeChannelRef.current) {
+        supabase.removeChannel(realtimeChannelRef.current);
+        realtimeChannelRef.current = null;
+      }
+      return;
+    }
+    if (realtimeChannelRef.current) return;
+    const channel = supabase
+      .channel(`agent-messages-${sid}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "sessions",
+          filter: `session_id=eq.${sid}`,
+        },
+        (payload) => {
+          const row = payload.new as {
+            id: string;
+            role: string;
+            message: string;
+            timestamp: string;
+          };
+          if (row.role !== "agent") return;
+          if (seenAgentMessageIds.current.has(row.id)) return;
+          seenAgentMessageIds.current.add(row.id);
+          const agentMsg: TestChatMessage = {
+            id: row.id,
+            role: "agent",
+            text: row.message,
+            sentAt: row.timestamp ?? new Date().toISOString(),
+            feedback: null,
+          };
+          setMessages((prev) => [...prev, agentMsg]);
+          toast({
+            title: "Support Agent replied",
+            description: row.message.slice(0, 80),
+          });
+        }
+      )
+      .subscribe();
+    realtimeChannelRef.current = channel;
+    return () => {
+      supabase.removeChannel(channel);
+      realtimeChannelRef.current = null;
+    };
+  }, [messages.length]);
+
   const getSessionId = useCallback(() => {
     if (!sessionIdRef.current) {
       sessionIdRef.current = getOrCreateSessionId(env);
