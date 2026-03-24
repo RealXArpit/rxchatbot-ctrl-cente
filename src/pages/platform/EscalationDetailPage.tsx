@@ -35,6 +35,7 @@ export default function EscalationDetailPage() {
   const { ticketId, env } = useParams<{ ticketId: string; env: string }>();
   const navigate = useNavigate();
   const { session } = useAuth();
+  const { client } = useTenant();
   const role = session?.user.role;
   const isAuditor = role === "Auditor";
   const canReply = CAN_REPLY_ROLES.includes(role as Role);
@@ -44,8 +45,8 @@ export default function EscalationDetailPage() {
   const updateStatus = useUpdateEscalationStatus();
   const [mockTicket] = useState<EscalationTicket | null>(() => getEscalationById(ticketId ?? ""));
   const ticket = liveTicket ?? mockTicket;
-  const [lastSent, setLastSent] = useState<Date | null>(null);
   const [selectedMessages, setSelectedMessages] = useState<SelectedMessage[]>([]);
+  const [endingTakeover, setEndingTakeover] = useState(false);
 
   const refresh = useCallback(() => {
     refetch();
