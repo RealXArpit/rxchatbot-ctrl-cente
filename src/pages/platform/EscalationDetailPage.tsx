@@ -1,11 +1,12 @@
 import { useState, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, RotateCcw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/platform/PageHeader";
 import { useAuth } from "@/contexts/AuthContext";
+import { useTenant } from "@/contexts/TenantContext";
 import {
   getEscalationById, assignTicket, addNote, addReply, resolveTicket,
   type EscalationTicket,
@@ -16,11 +17,9 @@ import { SlaTimer } from "@/components/escalations/SlaTimer";
 import { AssignmentPanel } from "@/components/escalations/AssignmentPanel";
 import { InternalNotes } from "@/components/escalations/InternalNotes";
 import { ResolutionForm } from "@/components/escalations/ResolutionForm";
-import { TakeoverShell } from "@/components/escalations/TakeoverShell";
 import { CreateKbFromTicketButton } from "@/components/escalations/CreateKbFromTicketButton";
 import { TranscriptWithSelection, type SelectedMessage } from "@/components/escalations/TranscriptWithSelection";
 import { AgentReplyForm } from "@/components/escalations/AgentReplyForm";
-import { AgentPollBanner } from "@/components/escalations/AgentPollBanner";
 import { toast } from "sonner";
 import type { Role } from "@/lib/mock-api";
 
@@ -36,6 +35,7 @@ export default function EscalationDetailPage() {
   const { ticketId, env } = useParams<{ ticketId: string; env: string }>();
   const navigate = useNavigate();
   const { session } = useAuth();
+  const { client } = useTenant();
   const role = session?.user.role;
   const isAuditor = role === "Auditor";
   const canReply = CAN_REPLY_ROLES.includes(role as Role);
@@ -45,8 +45,8 @@ export default function EscalationDetailPage() {
   const updateStatus = useUpdateEscalationStatus();
   const [mockTicket] = useState<EscalationTicket | null>(() => getEscalationById(ticketId ?? ""));
   const ticket = liveTicket ?? mockTicket;
-  const [lastSent, setLastSent] = useState<Date | null>(null);
   const [selectedMessages, setSelectedMessages] = useState<SelectedMessage[]>([]);
+  const [endingTakeover, setEndingTakeover] = useState(false);
 
   const refresh = useCallback(() => {
     refetch();
@@ -118,9 +118,27 @@ export default function EscalationDetailPage() {
   };
 
   const handleAgentSuccess = (op: string) => {
-    setLastSent(new Date());
     if (op === "RESOLVE") {
       handleResolve("Resolved via agent intervention", "RESOLVED");
+    }
+  };
+
+  const handleEndTakeover = async () => {
+    if (!client || !session || !ticket) return;
+    setEndingTakeover(true);
+    try {
+      await client.agentIntervene({
+        sessionId: ticket.sessionId,
+        agentId: session.user.id,
+        agentMessage: '',
+        operation: 'END_TAKEOVER',
+        ticketId: ticket.id,
+      });
+      toast.success("Bot has resumed control of this session");
+    } catch {
+      toast.error("Failed to end takeover");
+    } finally {
+      setEndingTakeover(false);
     }
   };
 
@@ -195,22 +213,24 @@ export default function EscalationDetailPage() {
             onSelectionChange={setSelectedMessages}
           />
 
-          <TakeoverShell
-            replies={ticket.replies}
-            onReply={handleReply}
-            readOnly={isAuditor || !canReply}
-            sessionId={ticket.sessionId}
-            ticketId={ticket.id}
-          />
-
-          {lastSent && <AgentPollBanner sessionId={ticket.sessionId} sentAt={lastSent} />}
-
           {canReply && ticket.status !== "RESOLVED" && ticket.status !== "CLOSED" && (
             <AgentReplyForm
               ticketId={ticket.id}
               sessionId={ticket.sessionId}
               onSuccess={handleAgentSuccess}
             />
+          )}
+
+          {canReply && ticket.status !== "RESOLVED" && ticket.status !== "CLOSED" && (
+            <Button
+              variant="outline"
+              onClick={handleEndTakeover}
+              disabled={endingTakeover}
+              className="w-full gap-2"
+            >
+              {endingTakeover ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+              End Takeover — Return to Bot
+            </Button>
           )}
 
           <InternalNotes notes={ticket.notes} onAdd={handleAddNote} readOnly={isAuditor} />
