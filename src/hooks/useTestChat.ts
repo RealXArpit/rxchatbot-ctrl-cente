@@ -5,6 +5,7 @@ import type { TestChatMessage, TestChatSession } from "@/types/test-chat";
 import { toast } from "@/hooks/use-toast";
 import { appendTestSession } from "@/lib/mock-conversations";
 import { saveSessionToHistory } from "@/components/test-chat/SessionHistoryDrawer";
+import { supabase } from "@/lib/supabase";
 
 const SESSION_KEY = "rxchat_test_session_id";
 
