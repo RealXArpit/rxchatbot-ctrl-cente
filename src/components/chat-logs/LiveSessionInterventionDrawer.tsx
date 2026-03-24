@@ -144,7 +144,7 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
       await client.agentIntervene({
         sessionId: session.session_id,
         agentId: authSession.user.id,
-        agentMessage: '__takeover_ended__',
+        agentMessage: '',
         operation: 'END_TAKEOVER',
       });
     } catch {
