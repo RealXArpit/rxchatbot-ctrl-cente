@@ -68,8 +68,26 @@ export function useTestChat() {
             id: string;
             role: string;
             message: string;
+            message_type?: string;
             timestamp: string;
           };
+          if (row.role === "system") {
+            // Agent ended takeover — show a handoff notice
+            if (row.message_type === "system") {
+              const handoffMsg: TestChatMessage = {
+                id: row.id,
+                role: "bot",
+                text: "The agent has left the chat. You can continue chatting with Reya.",
+                sentAt: row.timestamp ?? new Date().toISOString(),
+                feedback: null,
+              };
+              if (!seenAgentMessageIds.current.has(row.id)) {
+                seenAgentMessageIds.current.add(row.id);
+                setMessages((prev) => [...prev, handoffMsg]);
+              }
+            }
+            return;
+          }
           if (row.role !== "agent") return;
           if (seenAgentMessageIds.current.has(row.id)) return;
           seenAgentMessageIds.current.add(row.id);
