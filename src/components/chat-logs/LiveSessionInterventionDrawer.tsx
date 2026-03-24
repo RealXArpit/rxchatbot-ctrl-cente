@@ -140,23 +140,17 @@ export function LiveSessionInterventionDrawer({ session, onClose }: Props) {
 
   const handleEndTakeover = async () => {
     if (!client || !authSession || !session) return;
-    setEndingTakeover(true);
     try {
       await client.agentIntervene({
         sessionId: session.session_id,
         agentId: authSession.user.id,
-        agentMessage: "The bot has resumed. Thank you for your patience.",
-        operation: "TAKEOVER",
+        agentMessage: '__takeover_ended__',
+        operation: 'END_TAKEOVER',
       });
-      toast.success("Takeover ended — bot resumed");
     } catch {
-      toast.error("Failed to end takeover");
-    } finally {
-      setIsTakeover(false);
-      setMessage("");
-      setSendError(null);
-      setEndingTakeover(false);
+      // Silent — even if this fails, switch back to observation mode
     }
+    setIsTakeover(false);
   };
 
   const roleBubbleClass: Record<string, string> = {
