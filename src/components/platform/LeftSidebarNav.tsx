@@ -45,7 +45,7 @@ export function LeftSidebarNav() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="px-4 py-3 border-b border-sidebar-border">
-        <span className="text-lg font-bold tracking-tight text-primary italic">
+        <span className="text-lg font-bold tracking-widest uppercase text-primary dark:font-mono dark:not-italic dark:tracking-[0.15em]">
           {collapsed ? "R" : "RealX"}
         </span>
       </SidebarHeader>

@@ -6,10 +6,12 @@ import { UserMenu } from "./UserMenu";
 import { RoleBadge } from "./RoleBadge";
 import { SecurityBanner } from "./SecurityBanner";
 import { useAuth } from "@/contexts/AuthContext";
-import { Bell } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
+import { Bell, Sun, Moon } from "lucide-react";
 
 export function TopBar() {
   const { session } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="shrink-0">
@@ -24,6 +26,17 @@ export function TopBar() {
           <EnvironmentSelector />
           <WebhookStatusDot />
           <div className="h-5 w-px bg-border" />
+          <button
+            onClick={toggleTheme}
+            className="relative text-muted-foreground hover:text-foreground transition-colors"
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? (
+              <Sun className="h-4 w-4" />
+            ) : (
+              <Moon className="h-4 w-4" />
+            )}
+          </button>
           <button className="relative text-muted-foreground hover:text-foreground transition-colors">
             <Bell className="h-5 w-5" />
             <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-destructive" />
