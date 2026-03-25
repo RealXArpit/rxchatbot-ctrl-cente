@@ -12,6 +12,7 @@ import ConfigurationPage from "./ConfigurationPage";
 import FeedbackPage from "./FeedbackPage";
 import IntegrationsPage from "./IntegrationsPage";
 import AuditPage from "./AuditPage";
+import UsersPage from "./UsersPage";
 
 const moduleMeta: Record<string, { title: string; subtitle: string }> = {
   overview: { title: "Overview", subtitle: "High-level metrics and system health at a glance." },
@@ -43,6 +44,7 @@ export default function ModulePage() {
   if (module === "feedback") return <FeedbackPage />;
   if (module === "integrations") return <IntegrationsPage />;
   if (module === "audit") return <AuditPage />;
+  if (module === "users") return <UsersPage />;
 
   const allowedRoles = routeMetadata[module!]?.allowedRoles ?? [];
 
