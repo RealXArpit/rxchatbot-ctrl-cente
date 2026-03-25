@@ -80,14 +80,6 @@ export default function LoginPage() {
             Sign in
           </Button>
 
-          <div className="text-xs text-muted-foreground space-y-1 pt-2 border-t border-border">
-            <p className="font-medium">Demo accounts:</p>
-            <p>arpit@realx.in — SuperAdmin</p>
-            <p>ops@realx.in — OpsManager</p>
-            <p>kb@realx.in — KnowledgeManager</p>
-            <p>agent@realx.in — SupportAgent</p>
-            <p>audit@realx.in — Auditor</p>
-          </div>
         </form>
       </div>
     </div>
