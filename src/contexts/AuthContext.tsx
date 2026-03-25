@@ -138,13 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [session]);
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
-  }
+  if (loading) return null;
 
   return (
     <AuthCtx.Provider value={{ session, isAuthenticated: !!session, login, logout, verifyMfa }}>
