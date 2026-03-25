@@ -58,32 +58,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data }) => {
-      if (data.session?.user) {
-        const profile = await fetchProfile(data.session.user.id);
-        if (profile) {
-          setSession({
-            sessionId: data.session.access_token,
-            tenantId: "realx",
-            user: profile,
-            mfa: {
-              required: MFA_REQUIRED_ROLES.includes(profile.role),
-              method: "totp",
-              verified: true,
-            },
-          });
-        }
-      }
-      setLoading(false);
-    });
+    let mounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, supabaseSession) => {
-        if (supabaseSession?.user) {
-          const profile = await fetchProfile(supabaseSession.user.id);
-          if (profile) {
+    supabase.auth.getSession().then(async ({ data, error }) => {
+      if (!mounted) return;
+      try {
+        if (!error && data.session?.user) {
+          const profile = await fetchProfile(data.session.user.id);
+          if (profile && mounted) {
             setSession({
-              sessionId: supabaseSession.access_token,
+              sessionId: data.session.access_token,
               tenantId: "realx",
               user: profile,
               mfa: {
@@ -93,13 +77,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               },
             });
           }
-        } else {
-          setSession(null);
+        }
+      } catch (e) {
+        console.error("Failed to load profile:", e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }).catch((e) => {
+      console.error("getSession failed:", e);
+      if (mounted) setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, supabaseSession) => {
+        if (!mounted) return;
+        try {
+          if (supabaseSession?.user) {
+            const profile = await fetchProfile(supabaseSession.user.id);
+            if (profile && mounted) {
+              setSession({
+                sessionId: supabaseSession.access_token,
+                tenantId: "realx",
+                user: profile,
+                mfa: {
+                  required: MFA_REQUIRED_ROLES.includes(profile.role),
+                  method: "totp",
+                  verified: true,
+                },
+              });
+            }
+          } else {
+            if (mounted) setSession(null);
+          }
+        } catch (e) {
+          console.error("Auth state change error:", e);
         }
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
