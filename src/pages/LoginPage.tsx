@@ -23,22 +23,25 @@ export default function LoginPage() {
     return null;
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const result = await login(email, password);
-    setLoading(false);
+    // Simulate async
+    setTimeout(() => {
+      const result = login(email, password);
+      setLoading(false);
 
-    if (result.ok) {
-      navigate(from, { replace: true });
-    } else {
-      toast({
-        variant: "destructive",
-        title: "Login failed",
-        description: result.error,
-      });
-    }
+      if (result.ok) {
+        navigate(from, { replace: true });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Login failed",
+          description: result.error,
+        });
+      }
+    }, 400);
   };
 
   return (
