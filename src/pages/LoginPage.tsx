@@ -27,21 +27,18 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate async
-    setTimeout(() => {
-      const result = login(email, password);
-      setLoading(false);
+    const result = await login(email, password);
+    setLoading(false);
 
-      if (result.ok) {
-        navigate(from, { replace: true });
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Login failed",
-          description: result.error,
-        });
-      }
-    }, 400);
+    if (result.ok) {
+      navigate(from, { replace: true });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: result.error,
+      });
+    }
   };
 
   return (
