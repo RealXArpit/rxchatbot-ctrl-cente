@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [session]);
 
-  if (loading) return null;
+  
 
   return (
     <AuthCtx.Provider value={{ session, isAuthenticated: !!session, login, logout, verifyMfa }}>
