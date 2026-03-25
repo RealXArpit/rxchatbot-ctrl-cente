@@ -60,12 +60,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(async ({ data, error }) => {
+    // First: check for existing session immediately
+    supabase.auth.getSession().then(async ({ data }) => {
       if (!mounted) return;
-      try {
-        if (!error && data.session?.user) {
+      if (data.session?.user) {
+        try {
           const profile = await fetchProfile(data.session.user.id);
-          if (profile && mounted) {
+          if (mounted && profile) {
             setSession({
               sessionId: data.session.access_token,
               tenantId: "realx",
@@ -77,24 +78,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               },
             });
           }
+        } catch (e) {
+          console.error("Profile fetch error:", e);
         }
-      } catch (e) {
-        console.error("Failed to load profile:", e);
-      } finally {
-        if (mounted) setLoading(false);
       }
-    }).catch((e) => {
-      console.error("getSession failed:", e);
+      // Always clear loading after getSession resolves
       if (mounted) setLoading(false);
     });
 
+    // Second: listen for future auth changes (login, logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, supabaseSession) => {
         if (!mounted) return;
-        try {
-          if (supabaseSession?.user) {
+        if (event === "SIGNED_IN" && supabaseSession?.user) {
+          try {
             const profile = await fetchProfile(supabaseSession.user.id);
-            if (profile && mounted) {
+            if (mounted && profile) {
               setSession({
                 sessionId: supabaseSession.access_token,
                 tenantId: "realx",
@@ -106,11 +105,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 },
               });
             }
-          } else {
-            if (mounted) setSession(null);
+          } catch (e) {
+            console.error("Auth change error:", e);
           }
-        } catch (e) {
-          console.error("Auth state change error:", e);
+        } else if (event === "SIGNED_OUT") {
+          if (mounted) setSession(null);
         }
       }
     );
