@@ -1,45 +1,131 @@
-import React, { createContext, useContext, useState, useCallback } from "react";
-import type { AuthSession } from "@/lib/mock-auth";
-import { mockLogin, mockLogout, mockGetSession, mockVerifyMfa } from "@/lib/mock-auth";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { supabase } from "@/lib/supabase";
+import type { Role } from "@/lib/mock-api";
+
+export interface AuthUser {
+  id: string;
+  name: string;
+  email: string;
+  role: Role;
+  permissions: string[];
+  tenantId: string;
+}
+
+export interface AuthSession {
+  sessionId: string;
+  tenantId: string;
+  user: AuthUser;
+  mfa: { required: boolean; method: "totp"; verified: boolean };
+}
 
 interface AuthContextValue {
   session: AuthSession | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => { ok: boolean; error?: string };
-  logout: () => void;
+  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  logout: () => Promise<void>;
   verifyMfa: () => void;
 }
 
 const AuthCtx = createContext<AuthContextValue>({
   session: null,
   isAuthenticated: false,
-  login: () => ({ ok: false, error: "Not initialized" }),
-  logout: () => {},
+  login: async () => ({ ok: false, error: "Not initialized" }),
+  logout: async () => {},
   verifyMfa: () => {},
 });
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<AuthSession | null>(mockGetSession);
+const MFA_REQUIRED_ROLES: Role[] = ["SuperAdmin", "OpsManager"];
 
-  const login = useCallback((email: string, password: string): { ok: boolean; error?: string } => {
-    const result = mockLogin(email, password, "realx");
-    if (!result.ok || !result.session) {
-      return { ok: false, error: result.error ?? "Login failed" };
-    }
-    setSession(result.session);
+async function fetchProfile(userId: string): Promise<AuthUser | null> {
+  const { data, error } = await supabase
+    .from("user_profiles")
+    .select("id, name, email, role, permissions")
+    .eq("id", userId)
+    .single();
+  if (error || !data) return null;
+  return {
+    id: data.id,
+    name: data.name,
+    email: data.email,
+    role: data.role as Role,
+    permissions: data.permissions ?? [],
+    tenantId: "realx",
+  };
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(async ({ data }) => {
+      if (data.session?.user) {
+        const profile = await fetchProfile(data.session.user.id);
+        if (profile) {
+          setSession({
+            sessionId: data.session.access_token,
+            tenantId: "realx",
+            user: profile,
+            mfa: {
+              required: MFA_REQUIRED_ROLES.includes(profile.role),
+              method: "totp",
+              verified: true,
+            },
+          });
+        }
+      }
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, supabaseSession) => {
+        if (supabaseSession?.user) {
+          const profile = await fetchProfile(supabaseSession.user.id);
+          if (profile) {
+            setSession({
+              sessionId: supabaseSession.access_token,
+              tenantId: "realx",
+              user: profile,
+              mfa: {
+                required: MFA_REQUIRED_ROLES.includes(profile.role),
+                method: "totp",
+                verified: true,
+              },
+            });
+          }
+        } else {
+          setSession(null);
+        }
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const login = useCallback(async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { ok: false, error: error.message };
     return { ok: true };
   }, []);
 
-  const logout = useCallback(() => {
-    mockLogout();
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
     setSession(null);
   }, []);
 
   const verifyMfa = useCallback(() => {
-    if (mockVerifyMfa()) {
-      setSession(mockGetSession());
+    if (session) {
+      setSession({ ...session, mfa: { ...session.mfa, verified: true } });
     }
-  }, []);
+  }, [session]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <AuthCtx.Provider value={{ session, isAuthenticated: !!session, login, logout, verifyMfa }}>
