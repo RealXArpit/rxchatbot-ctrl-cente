@@ -17,11 +17,11 @@ export default function LoginPage() {
 
   const from = (location.state as { from?: string })?.from || "/realx/dev/overview";
 
-  // If already logged in, redirect
-  if (isAuthenticated) {
-    navigate(from, { replace: true });
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
