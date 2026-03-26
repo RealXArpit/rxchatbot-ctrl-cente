@@ -32,10 +32,13 @@ export default function LoginPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
+     setSubmitting(true);
+    try{
     e.preventDefault();
-    setSubmitting(true);
+   console.log("kar rha hu")
     const result = await login(email, password);
-    setSubmitting(false);
+      console.log("heeloo",result);
+    
     if (result.ok) {
       navigate(from, { replace: true });
     } else {
@@ -44,6 +47,11 @@ export default function LoginPage() {
         title: "Login failed",
         description: result.error,
       });
+    }
+      }catch(error){
+      console.log(error,"bhaiiii")
+      }finally{
+    setSubmitting(false);
     }
   };
 
