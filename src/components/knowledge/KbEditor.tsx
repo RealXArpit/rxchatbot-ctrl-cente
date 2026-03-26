@@ -33,6 +33,8 @@ export function KbEditor({ initial, onSave, onCancel, readOnly, kbId, isNew }: P
   const [errors, setErrors] = useState<Partial<Record<keyof KbFormData, string>>>({});
   const [pushing, setPushing] = useState(false);
 
+  const formRef = useRef<HTMLDivElement>(null);
+
   const validate = (): boolean => {
     const e: Partial<Record<keyof KbFormData, string>> = {};
     if (!form.category) e.category = "Required";
@@ -41,13 +43,20 @@ export function KbEditor({ initial, onSave, onCancel, readOnly, kbId, isNew }: P
     if (!form.answer.trim()) e.answer = "Required";
     if (form.answer.length > 5000) e.answer = "Max 5000 chars";
     if (!form.keywords.trim()) e.keywords = "At least one keyword";
-    if (!form.sourceUrl.trim()) e.sourceUrl = "Required";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
   const handleSubmit = () => {
-    if (validate()) onSave(form);
+    if (validate()) {
+      onSave(form);
+    } else {
+      toast.error("Please fill in all required fields before saving.");
+      setTimeout(() => {
+        const firstError = formRef.current?.querySelector('.text-destructive');
+        firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 0);
+    }
   };
 
   const handleSaveAndPush = async () => {
