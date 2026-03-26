@@ -113,28 +113,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-       (event, supabaseSession) => {
-        console.log(mounted,"doneeee",event,supabaseSession)
+      (event, supabaseSession) => {
         if (!mounted) return;
         if (event === 'SIGNED_IN' && supabaseSession?.user) {
-          try {
-            console.log("profile fetching")
-            const profile =  fetchProfile(supabaseSession.user.id);
-            console.log(profile);
-            console.log("profile doneee")
-            if (mounted && profile) {
-              setSession(buildSession(supabaseSession.access_token, profile));
+          // Fetch the profile async; without `await` we'd store a Promise as the user,
+          // which can break RBAC checks and route guards.
+          void (async () => {
+            try {
+              const profile = await fetchProfile(supabaseSession.user.id);
+              if (mounted && profile) {
+                setSession(buildSession(supabaseSession.access_token, profile));
+              }
+            } catch (e) {
+              console.error('[AuthProvider] fetchProfile failed on SIGNED_IN:', e);
+            } finally {
+              if (mounted && !initDone.current) {
+                setLoading(false);
+                initDone.current = true;
+              }
             }
-          } catch (e) {
-            console.error('[AuthProvider] fetchProfile failed on SIGNED_IN:', e);
-          }
-          if (mounted && !initDone.current) {
-            setLoading(false);
-            initDone.current = true;
-          }
-        } else if (event === 'SIGNED_OUT') {
+          })();
+          return;
+        }
+        if (event === 'SIGNED_OUT') {
           if (mounted) setSession(null);
-        } else if (event === 'TOKEN_REFRESHED' && supabaseSession?.user) {
+          return;
+        }
+        if (event === 'TOKEN_REFRESHED' && supabaseSession?.user) {
           if (mounted) {
             setSession(prev =>
               prev ? { ...prev, sessionId: supabaseSession.access_token } : prev
@@ -152,12 +157,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
 const login = async (email: string, password: string) => {
-  console.log("supa bhai");
   try {
     const result = await supabase.auth.signInWithPassword({ email, password });
-    console.log(result, "supa hu");
-     setSession(buildSession(result.data.session.access_token || "", result.data.user ||{}));
-    if (result.error) return { ok: false, error: result.error.message }; // ✅ fixed typo too
+    if (result.error) return { ok: false, error: result.error.message };
+
+    const accessToken = result.data.session?.access_token;
+    const userId = result.data.user?.id;
+    if (!accessToken || !userId) {
+      return { ok: false, error: 'Login succeeded but session/user is missing.' };
+    }
+
+    // Ensure RBAC data (role/permissions) is loaded before navigation/guards run.
+    const profile = await fetchProfile(userId);
+    if (!profile) {
+      return { ok: false, error: 'Login succeeded but profile could not be loaded.' };
+    }
+
+    setSession(buildSession(accessToken, profile));
     return { ok: true };
   } catch (e) {
     console.error("login threw:", e);
