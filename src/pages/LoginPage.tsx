@@ -35,9 +35,7 @@ export default function LoginPage() {
      setSubmitting(true);
     try{
     e.preventDefault();
-   console.log("kar rha hu")
     const result = await login(email, password);
-      console.log("heeloo",result);
     
     if (result.ok) {
       navigate("/realx/dev/overview", { replace: true });
