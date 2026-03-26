@@ -113,11 +113,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, supabaseSession) => {
+       (event, supabaseSession) => {
+        console.log(mounted,"doneeee",event,supabaseSession)
         if (!mounted) return;
         if (event === 'SIGNED_IN' && supabaseSession?.user) {
           try {
-            const profile = await fetchProfile(supabaseSession.user.id);
+            console.log("profile fetching")
+            const profile =  fetchProfile(supabaseSession.user.id);
+            console.log("profile doneee")
             if (mounted && profile) {
               setSession(buildSession(supabaseSession.access_token, profile));
             }
