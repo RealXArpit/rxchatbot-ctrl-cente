@@ -63,7 +63,7 @@ export default function KbDetailPage() {
   const isNew = kbId === "new";
   const isAuditor = role === "Auditor";
   const isSupportAgent = role === "SupportAgent";
-  const canEdit = role === "KnowledgeManager" || role === "OpsManager" || role === "SuperAdmin";
+  const canEdit = role === "KnowledgeManager" || role === "OpsManager" || role === "SuperAdmin" || (session?.user?.permissions ?? []).includes("kb_submit") || (session?.user?.permissions ?? []).includes("kb_publish");
   const showAdminPanel = !isNew && ADMIN_PANEL_ROLES.includes(role);
 
   const { data: liveData, isLoading, error, refetch } = useKbItems();
@@ -124,6 +124,11 @@ export default function KbDetailPage() {
   }
 
   const handleSave = (data: { category: string; question: string; answer: string; keywords: string; sourceUrl: string }) => {
+    console.log('[KbDetailPage] handleSave called, isNew:', isNew, 'canEdit:', canEdit);
+    if (!canEdit) {
+      console.error('[KbDetailPage] Save blocked: canEdit is false. role:', role, 'session:', session?.user);
+      return;
+    }
     const kws = data.keywords.split(",").map((k) => k.trim().toLowerCase()).filter(Boolean);
 
     // Try Supabase mutation for existing items
