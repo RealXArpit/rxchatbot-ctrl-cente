@@ -57,6 +57,10 @@ export function useUpdateKbItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['knowledge_base'] });
     },
+    onError: (error) => {
+      console.error('KB update failed:', error);
+      toast({ variant: 'destructive', title: 'Save failed', description: error.message });
+    },
   });
 }
 
