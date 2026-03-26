@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { supabase } from "@/lib/supabase";
-import type { Role } from "@/lib/mock-api";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { supabase } from '@/lib/supabase';
+import type { Role } from '@/lib/mock-api';
 
 export interface AuthUser {
   id: string;
@@ -15,12 +15,13 @@ export interface AuthSession {
   sessionId: string;
   tenantId: string;
   user: AuthUser;
-  mfa: { required: boolean; method: "totp"; verified: boolean };
+  mfa: { required: boolean; method: 'totp'; verified: boolean };
 }
 
 interface AuthContextValue {
   session: AuthSession | null;
   isAuthenticated: boolean;
+  loading: boolean;
   login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
   logout: () => Promise<void>;
   verifyMfa: () => void;
@@ -29,18 +30,19 @@ interface AuthContextValue {
 const AuthCtx = createContext<AuthContextValue>({
   session: null,
   isAuthenticated: false,
-  login: async () => ({ ok: false, error: "Not initialized" }),
+  loading: true,
+  login: async () => ({ ok: false, error: 'Not initialized' }),
   logout: async () => {},
   verifyMfa: () => {},
 });
 
-const MFA_REQUIRED_ROLES: Role[] = ["SuperAdmin", "OpsManager"];
+const MFA_REQUIRED_ROLES: Role[] = ['SuperAdmin', 'OpsManager'];
 
 async function fetchProfile(userId: string): Promise<AuthUser | null> {
   const { data, error } = await supabase
-    .from("user_profiles")
-    .select("id, name, email, role, permissions")
-    .eq("id", userId)
+    .from('user_profiles')
+    .select('id, name, email, role, permissions')
+    .eq('id', userId)
     .single();
   if (error || !data) return null;
   return {
@@ -49,67 +51,73 @@ async function fetchProfile(userId: string): Promise<AuthUser | null> {
     email: data.email,
     role: data.role as Role,
     permissions: data.permissions ?? [],
-    tenantId: "realx",
+    tenantId: 'realx',
+  };
+}
+
+function buildSession(accessToken: string, profile: AuthUser): AuthSession {
+  return {
+    sessionId: accessToken,
+    tenantId: 'realx',
+    user: profile,
+    mfa: {
+      required: MFA_REQUIRED_ROLES.includes(profile.role),
+      method: 'totp',
+      verified: true,
+    },
   };
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const initDone = useRef(false);
 
   useEffect(() => {
     let mounted = true;
 
-    // First: check for existing session immediately
-    supabase.auth.getSession().then(async ({ data }) => {
+    supabase.auth.getSession().then(async ({ data, error }) => {
       if (!mounted) return;
-      if (data.session?.user) {
+      if (!error && data.session?.user) {
         try {
           const profile = await fetchProfile(data.session.user.id);
           if (mounted && profile) {
-            setSession({
-              sessionId: data.session.access_token,
-              tenantId: "realx",
-              user: profile,
-              mfa: {
-                required: MFA_REQUIRED_ROLES.includes(profile.role),
-                method: "totp",
-                verified: true,
-              },
-            });
+            setSession(buildSession(data.session.access_token, profile));
           }
         } catch (e) {
-          console.error("Profile fetch error:", e);
+          console.error('[AuthProvider] fetchProfile failed on init:', e);
         }
       }
-      // Always clear loading after getSession resolves
-      if (mounted) setLoading(false);
+      if (mounted) {
+        setLoading(false);
+        initDone.current = true;
+      }
     });
 
-    // Second: listen for future auth changes (login, logout)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, supabaseSession) => {
         if (!mounted) return;
-        if (event === "SIGNED_IN" && supabaseSession?.user) {
+        if (event === 'SIGNED_IN' && supabaseSession?.user) {
           try {
             const profile = await fetchProfile(supabaseSession.user.id);
             if (mounted && profile) {
-              setSession({
-                sessionId: supabaseSession.access_token,
-                tenantId: "realx",
-                user: profile,
-                mfa: {
-                  required: MFA_REQUIRED_ROLES.includes(profile.role),
-                  method: "totp",
-                  verified: true,
-                },
-              });
+              setSession(buildSession(supabaseSession.access_token, profile));
             }
           } catch (e) {
-            console.error("Auth change error:", e);
+            console.error('[AuthProvider] fetchProfile failed on SIGNED_IN:', e);
           }
-        } else if (event === "SIGNED_OUT") {
+          if (mounted && !initDone.current) {
+            setLoading(false);
+            initDone.current = true;
+          }
+        } else if (event === 'SIGNED_OUT') {
           if (mounted) setSession(null);
+        } else if (event === 'TOKEN_REFRESHED' && supabaseSession?.user) {
+          if (mounted) {
+            setSession(prev =>
+              prev ? { ...prev, sessionId: supabaseSession.access_token } : prev
+            );
+          }
         }
       }
     );
@@ -137,10 +145,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [session]);
 
-  
-
   return (
-    <AuthCtx.Provider value={{ session, isAuthenticated: !!session, login, logout, verifyMfa }}>
+    <AuthCtx.Provider
+      value={{ session, isAuthenticated: !!session, loading, login, logout, verifyMfa }}
+    >
       {children}
     </AuthCtx.Provider>
   );
