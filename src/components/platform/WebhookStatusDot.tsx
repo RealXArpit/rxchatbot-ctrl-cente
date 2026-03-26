@@ -71,7 +71,7 @@ export function WebhookStatusDot() {
         />
       </TooltipTrigger>
       <TooltipContent side="bottom" className="text-xs space-y-1 max-w-xs">
-        <p className="font-medium">{envConfig.label}</p>
+        <p className="font-medium">{envConfig.label} — n8n {statusLabels[status]}</p>
         <p className="text-muted-foreground">
           {canSeeUrl ? envConfig.webhookBaseUrl : "Webhook configured"}
         </p>
