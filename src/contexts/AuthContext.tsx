@@ -116,7 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
        (event, supabaseSession) => {
         console.log(mounted,"doneeee",event,supabaseSession)
         if (!mounted) return;
-        if (event === 'SIGNED_INN' && supabaseSession?.user) {
+        if (event === 'SIGNED_IN' && supabaseSession?.user) {
           try {
             console.log("profile fetching")
             const profile =  fetchProfile(supabaseSession.user.id);
