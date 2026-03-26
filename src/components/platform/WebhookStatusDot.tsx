@@ -13,6 +13,12 @@ const statusColors: Record<Status, string> = {
   error: "bg-warning",
 };
 
+const statusLabels: Record<Status, string> = {
+  unknown: "Checking…",
+  reachable: "Online",
+  error: "Offline",
+};
+
 export function WebhookStatusDot() {
   const { envConfig } = useTenant();
   const { session } = useAuth();
@@ -25,25 +31,31 @@ export function WebhookStatusDot() {
   useEffect(() => {
     if (!envConfig) return;
 
+    let cancelled = false;
+
     const check = async () => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
       try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 5000);
         const res = await fetch(`${envConfig.webhookBaseUrl}/realx-ai`, {
           method: "HEAD",
           signal: controller.signal,
         });
-        clearTimeout(timeout);
-        setStatus(res.ok ? "reachable" : "error");
+        clearTimeout(timeoutId);
+        if (!cancelled) setStatus(res.ok ? "reachable" : "error");
       } catch {
-        setStatus("error");
+        clearTimeout(timeoutId);
+        if (!cancelled) setStatus("error");
       }
-      setLastChecked(new Date());
+      if (!cancelled) setLastChecked(new Date());
     };
 
     check();
     intervalRef.current = setInterval(check, 60_000);
-    return () => clearInterval(intervalRef.current);
+    return () => {
+      cancelled = true;
+      clearInterval(intervalRef.current);
+    };
   }, [envConfig?.webhookBaseUrl]);
 
   if (!envConfig) return null;
@@ -59,7 +71,7 @@ export function WebhookStatusDot() {
         />
       </TooltipTrigger>
       <TooltipContent side="bottom" className="text-xs space-y-1 max-w-xs">
-        <p className="font-medium">{envConfig.label}</p>
+        <p className="font-medium">{envConfig.label} — n8n {statusLabels[status]}</p>
         <p className="text-muted-foreground">
           {canSeeUrl ? envConfig.webhookBaseUrl : "Webhook configured"}
         </p>
