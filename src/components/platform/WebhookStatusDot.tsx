@@ -13,6 +13,12 @@ const statusColors: Record<Status, string> = {
   error: "bg-warning",
 };
 
+const statusLabels: Record<Status, string> = {
+  unknown: "Checking…",
+  reachable: "Online",
+  error: "Offline",
+};
+
 export function WebhookStatusDot() {
   const { envConfig } = useTenant();
   const { session } = useAuth();
