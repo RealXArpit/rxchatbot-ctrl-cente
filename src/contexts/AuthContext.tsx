@@ -76,13 +76,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(async ({ data, error }) => {
-      if (!mounted) return;
-      if (!error && data.session?.user) {
+    let initResolved = false;
+    const resolveInit = async (accessToken: string | null, userId: string | null) => {
+      if (!mounted || initResolved) return;
+      initResolved = true;
+      if (accessToken && userId) {
         try {
-          const profile = await fetchProfile(data.session.user.id);
+          const profile = await fetchProfile(userId);
           if (mounted && profile) {
-            setSession(buildSession(data.session.access_token, profile));
+            setSession(buildSession(accessToken, profile));
           }
         } catch (e) {
           console.error('[AuthProvider] fetchProfile failed on init:', e);
@@ -92,6 +94,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
         initDone.current = true;
       }
+    };
+
+    const timeoutId = setTimeout(() => {
+      resolveInit(null, null);
+    }, 3000);
+
+    supabase.auth.getSession().then(({ data, error }) => {
+      clearTimeout(timeoutId);
+      if (!error && data.session?.user) {
+        resolveInit(data.session.access_token, data.session.user.id);
+      } else {
+        resolveInit(null, null);
+      }
+    }).catch(() => {
+      clearTimeout(timeoutId);
+      resolveInit(null, null);
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -124,6 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);
