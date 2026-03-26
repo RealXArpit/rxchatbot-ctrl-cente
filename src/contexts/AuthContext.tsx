@@ -147,13 +147,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const login = useCallback(async (email: string, password: string) => {
-    console.log("supa bhai")
-    const result= await supabase.auth.signInWithPassword({ email, password });
-    console.log(result,"supa hu")
-    if (result.error) return { ok: false, error: error.message };
+const login = async (email: string, password: string) => {
+  console.log("supa bhai");
+  try {
+    const result = await supabase.auth.signInWithPassword({ email, password });
+    console.log(result, "supa hu");
+    if (result.error) return { ok: false, error: result.error.message }; // ✅ fixed typo too
     return { ok: true };
-  }, []);
+  } catch (e) {
+    console.error("login threw:", e);
+    return { ok: false, error: "Unexpected error" };
+  }
+};
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
