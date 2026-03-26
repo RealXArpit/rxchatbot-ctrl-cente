@@ -116,10 +116,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
        (event, supabaseSession) => {
         console.log(mounted,"doneeee",event,supabaseSession)
         if (!mounted) return;
-        if (event === 'SIGNED_IN' && supabaseSession?.user) {
+        if (event === 'SIGNED_INN' && supabaseSession?.user) {
           try {
             console.log("profile fetching")
             const profile =  fetchProfile(supabaseSession.user.id);
+            console.log(profile);
             console.log("profile doneee")
             if (mounted && profile) {
               setSession(buildSession(supabaseSession.access_token, profile));
@@ -155,6 +156,7 @@ const login = async (email: string, password: string) => {
   try {
     const result = await supabase.auth.signInWithPassword({ email, password });
     console.log(result, "supa hu");
+     setSession(buildSession(result.data.session.access_token || "", result.data.user ||{}));
     if (result.error) return { ok: false, error: result.error.message }; // ✅ fixed typo too
     return { ok: true };
   } catch (e) {
