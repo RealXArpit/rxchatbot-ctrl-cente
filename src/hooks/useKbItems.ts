@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { toast } from '@/hooks/use-toast';
 
 export function usePublishedCuratedQuestions() {
   return useQuery({
@@ -56,6 +57,10 @@ export function useUpdateKbItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['knowledge_base'] });
     },
+    onError: (error) => {
+      console.error('KB update failed:', error);
+      toast({ variant: 'destructive', title: 'Save failed', description: error.message });
+    },
   });
 }
 
@@ -89,6 +94,10 @@ export function useAddKbItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['knowledge_base'] });
     },
+    onError: (error) => {
+      console.error('KB add failed:', error);
+      toast({ variant: 'destructive', title: 'Save failed', description: error.message });
+    },
   });
 }
 
@@ -104,6 +113,10 @@ export function useDeprecateKbItem() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['knowledge_base'] });
+    },
+    onError: (error) => {
+      console.error('KB deprecate failed:', error);
+      toast({ variant: 'destructive', title: 'Action failed', description: error.message });
     },
   });
 }
