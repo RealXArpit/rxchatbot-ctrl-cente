@@ -88,7 +88,7 @@ export function KbEditor({ initial, onSave, onCancel, readOnly, kbId, isNew }: P
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" ref={formRef}>
       <div>
         {field("category", "Category")}
         <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })} disabled={readOnly}>
