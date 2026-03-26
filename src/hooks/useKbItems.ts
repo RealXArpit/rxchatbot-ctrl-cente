@@ -114,5 +114,9 @@ export function useDeprecateKbItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['knowledge_base'] });
     },
+    onError: (error) => {
+      console.error('KB deprecate failed:', error);
+      toast({ variant: 'destructive', title: 'Action failed', description: error.message });
+    },
   });
 }
