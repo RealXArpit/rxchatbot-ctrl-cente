@@ -63,7 +63,7 @@ export default function KbDetailPage() {
   const isNew = kbId === "new";
   const isAuditor = role === "Auditor";
   const isSupportAgent = role === "SupportAgent";
-  const canEdit = role === "KnowledgeManager" || role === "OpsManager" || role === "SuperAdmin";
+  const canEdit = role === "KnowledgeManager" || role === "OpsManager" || role === "SuperAdmin" || (session?.user?.permissions ?? []).includes("kb_submit") || (session?.user?.permissions ?? []).includes("kb_publish");
   const showAdminPanel = !isNew && ADMIN_PANEL_ROLES.includes(role);
 
   const { data: liveData, isLoading, error, refetch } = useKbItems();
