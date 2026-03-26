@@ -94,6 +94,10 @@ export function useAddKbItem() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['knowledge_base'] });
     },
+    onError: (error) => {
+      console.error('KB add failed:', error);
+      toast({ variant: 'destructive', title: 'Save failed', description: error.message });
+    },
   });
 }
 
