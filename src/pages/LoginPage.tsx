@@ -10,26 +10,32 @@ import { Loader2 } from "lucide-react";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
+  const { login, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   const from = (location.state as { from?: string })?.from || "/realx/dev/overview";
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!loading && isAuthenticated) {
       navigate(from, { replace: true });
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, loading, navigate, from]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
+    setSubmitting(true);
     const result = await login(email, password);
-    setLoading(false);
-
+    setSubmitting(false);
     if (result.ok) {
       navigate(from, { replace: true });
     } else {
@@ -68,18 +74,17 @@ export default function LoginPage() {
             <Input
               id="password"
               type="password"
-              placeholder="Any non-empty password"
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          <Button type="submit" className="w-full" disabled={submitting}>
+            {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Sign in
           </Button>
-
         </form>
       </div>
     </div>
