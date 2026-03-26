@@ -40,7 +40,7 @@ export default function LoginPage() {
       console.log("heeloo",result);
     
     if (result.ok) {
-      navigate(from, { replace: true });
+      navigate("/realx/dev/overview", { replace: true });
     } else {
       toast({
         variant: "destructive",
