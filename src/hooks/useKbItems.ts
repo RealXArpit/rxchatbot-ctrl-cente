@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { toast } from '@/hooks/use-toast';
 
 export function usePublishedCuratedQuestions() {
   return useQuery({
