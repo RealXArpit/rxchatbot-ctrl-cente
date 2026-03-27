@@ -1,9 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import type { Message } from '@/lib/mock-conversations';
 
 export function useSessionTranscript(sessionId: string | null | undefined) {
-  return useQuery({
+  const queryClient = useQueryClient();
+
+  const query = useQuery({
     queryKey: ['session_transcript', sessionId],
     enabled: typeof sessionId === 'string' && sessionId.length > 0,
     staleTime: 0,
@@ -32,4 +35,37 @@ export function useSessionTranscript(sessionId: string | null | undefined) {
         }));
     },
   });
+
+  // Supabase Realtime subscription — refetch whenever a new message
+  // is inserted into the sessions table for this session_id.
+  // This replaces the previous behaviour where re-renders triggered
+  // accidental refetches.
+  useEffect(() => {
+    if (!sessionId) return;
+
+    const channel = supabase
+      .channel(`session_transcript_${sessionId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'sessions',
+          filter: `session_id=eq.${sessionId}`,
+        },
+        () => {
+          // Invalidate the cache so useQuery refetches immediately
+          queryClient.invalidateQueries({
+            queryKey: ['session_transcript', sessionId],
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [sessionId, queryClient]);
+
+  return query;
 }
