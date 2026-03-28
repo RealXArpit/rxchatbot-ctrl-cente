@@ -24,7 +24,8 @@ export function useKbItems() {
       const { data, error } = await supabase
         .from('knowledge_base')
         .select('*')
-        .order('updated_at', { ascending: false });
+        .not('status', 'in', '("DEPRECATED","ARCHIVED")')
+        .order('created_at', { ascending: false });
       if (error) throw error;
       return data ?? [];
     },
