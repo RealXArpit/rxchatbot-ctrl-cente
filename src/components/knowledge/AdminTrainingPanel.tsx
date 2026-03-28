@@ -8,6 +8,7 @@ import { Loader2, Upload, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import type { KnowledgeBaseItem } from "@/lib/mock-kb";
 import type { Role } from "@/lib/mock-api";
+import { useDeprecateKbItem } from "@/hooks/useKbItems";
 import {
   AlertDialog,
   AlertDialogAction,
