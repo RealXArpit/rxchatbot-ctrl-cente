@@ -164,15 +164,27 @@ export default function TrainPage() {
       return getKbItems(env ?? "dev", f);
     }
 
-    return source.filter((item) => {
+    source = source.filter((item) => {
       if (filters.q && !item.question.toLowerCase().includes(filters.q.toLowerCase()) && !item.answer.toLowerCase().includes(filters.q.toLowerCase())) return false;
       if (filters.status && (filters.status as string) !== "all-statuses" && item.status !== filters.status) return false;
       if (filters.category && item.category !== filters.category) return false;
       return true;
     });
-  }, [env, filters, liveData]);
 
-  useEffect(() => { setPage(1); }, [filters]);
+    if (sortBy === "updated") {
+      source.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    }
+
+    return source;
+  }, [env, filters, liveData, sortBy]);
+
+  const prevQRef = useRef(filters.q);
+  useEffect(() => {
+    if (filters.q !== prevQRef.current) {
+      setPage(1);
+      prevQRef.current = filters.q;
+    }
+  }, [filters.q]);
 
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
   const pagedItems = items.slice((page - 1) * pageSize, page * pageSize);
