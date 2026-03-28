@@ -130,6 +130,7 @@ export default function TrainPage() {
 
   const [tab, setTab] = useState("kb");
   const [filters, setFilters] = useState<KbFilterState>({ q: "", status: "", category: "" });
+  const [sortBy, setSortBy] = useState<"created" | "updated">("created");
 
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
