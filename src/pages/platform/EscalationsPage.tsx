@@ -65,7 +65,7 @@ export default function EscalationsPage() {
 
   return (
     <div>
-      <PageHeader title="Manual Escalations" subtitle="Review and resolve escalated conversations." />
+      <PageHeader title="Manual Escalations" subtitle={subtitle} />
       <div className="px-6 py-4 space-y-4">
         <EscalationsQueueTabs
           value={queue}
