@@ -40,7 +40,7 @@ export function AdminTrainingPanel({ item, onSyncUpdate }: Props) {
   const { session } = useAuth();
   const role = session?.user.role as Role;
   const [pushing, setPushing] = useState(false);
-  const [deprecating, setDeprecating] = useState(false);
+  const deprecateMutation = useDeprecateKbItem();
 
   const handlePush = async () => {
     if (!client) return;
@@ -62,23 +62,6 @@ export function AdminTrainingPanel({ item, onSyncUpdate }: Props) {
       toast.error("Failed to sync — check that the Admin Training workflow is Published in n8n");
     } finally {
       setPushing(false);
-    }
-  };
-
-  const handleDeprecate = async () => {
-    if (!client) return;
-    setDeprecating(true);
-    try {
-      await client.adminAction({
-        operation: "DEPRECATE_KB_ENTRY",
-        kbId: item.id,
-      });
-      onSyncUpdate({ n8nSyncStatus: "synced", n8nSyncedAt: new Date().toISOString() });
-      toast.success("Entry deprecated in n8n");
-    } catch {
-      toast.error("Failed to deprecate — check that the Admin Training workflow is Published in n8n");
-    } finally {
-      setDeprecating(false);
     }
   };
 
