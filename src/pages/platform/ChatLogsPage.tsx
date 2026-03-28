@@ -128,6 +128,14 @@ export default function ChatLogsPage() {
             {!isLoading && (
               <>
                 <LogsFiltersBar filters={filters} onChange={handleFilterChange} />
+                <KbPaginationBar
+                  page={page}
+                  totalPages={Math.max(1, Math.ceil(result.total / pageSize))}
+                  pageSize={pageSize}
+                  totalItems={result.total}
+                  onPageChange={setPage}
+                  onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+                />
                 <LogsTable
                   items={result.items}
                   columns={columns}
@@ -135,6 +143,14 @@ export default function ChatLogsPage() {
                   pageSize={result.pageSize}
                   total={result.total}
                   onPageChange={setPage}
+                />
+                <KbPaginationBar
+                  page={page}
+                  totalPages={Math.max(1, Math.ceil(result.total / pageSize))}
+                  pageSize={pageSize}
+                  totalItems={result.total}
+                  onPageChange={setPage}
+                  onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
                 />
               </>
             )}
