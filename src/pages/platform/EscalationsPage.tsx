@@ -34,6 +34,17 @@ export default function EscalationsPage() {
 
   const displayed = queue === "unassigned" ? unassigned : queue === "mine" ? mine : tickets;
 
+  const criticalCount = useMemo(() =>
+    tickets.filter(t => {
+      const u = getUrgency(t);
+      return u.level === "critical";
+    }).length,
+  [tickets]);
+
+  const subtitle = criticalCount > 0
+    ? `${criticalCount} critical · ${unassigned.length} unassigned · ${tickets.length} total`
+    : `Review and resolve escalated conversations. ${unassigned.length} unassigned.`;
+
   if (isLoading) {
     return (
       <div>
