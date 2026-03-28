@@ -221,28 +221,30 @@ export default function TrainPage() {
             </TabsList>
             <div className="flex items-center gap-2">
               {tab === "kb" && (
-                <div className="flex rounded-md border border-border overflow-hidden">
-                  <button
-                    onClick={() => handleKbViewChange("list")}
-                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs transition-colors ${kbView === "list" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
+                <>
+                  <div className="flex rounded-md border border-border overflow-hidden">
+                    <button
+                      onClick={() => handleKbViewChange("list")}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 text-xs transition-colors ${kbView === "list" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
+                    >
+                      <LayoutList className="h-3.5 w-3.5" /> List
+                    </button>
+                    <button
+                      onClick={() => handleKbViewChange("cards")}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 text-xs transition-colors ${kbView === "cards" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5" /> Cards
+                    </button>
+                  </div>
+                  <select
+                    value={sortBy}
+                    onChange={e => setSortBy(e.target.value as "created" | "updated")}
+                    className="h-7 rounded-md border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   >
-                    <LayoutList className="h-3.5 w-3.5" /> List
-                  </button>
-                  <button
-                    onClick={() => handleKbViewChange("cards")}
-                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs transition-colors ${kbView === "cards" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
-                  >
-                    <LayoutGrid className="h-3.5 w-3.5" /> Cards
-                  </button>
-                </div>
-                <select
-                  value={sortBy}
-                  onChange={e => setSortBy(e.target.value as "created" | "updated")}
-                  className="h-7 rounded-md border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  <option value="created">Newest first</option>
-                  <option value="updated">Recently edited</option>
-                </select>
+                    <option value="created">Newest first</option>
+                    <option value="updated">Recently edited</option>
+                  </select>
+                </>
               )}
               {tab === "kb" && canCreate && (
                 <Button size="sm" className="gap-1.5 text-xs" onClick={() => navigate(`/realx/${env}/train/kb/new`)}>
