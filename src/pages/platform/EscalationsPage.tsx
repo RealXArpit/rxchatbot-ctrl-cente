@@ -8,6 +8,7 @@ import { EscalationsTable } from "@/components/escalations/EscalationsTable";
 import { LoadingSkeleton } from "@/components/platform/LoadingSkeleton";
 import { ErrorPanel } from "@/components/platform/ErrorPanel";
 import { useEscalations } from "@/hooks/useEscalations";
+import { getUrgency } from "@/lib/escalation-urgency";
 import type { EscalationTicket } from "@/lib/mock-escalations";
 
 export default function EscalationsPage() {
@@ -33,6 +34,17 @@ export default function EscalationsPage() {
 
   const displayed = queue === "unassigned" ? unassigned : queue === "mine" ? mine : tickets;
 
+  const criticalCount = useMemo(() =>
+    tickets.filter(t => {
+      const u = getUrgency(t);
+      return u.level === "critical";
+    }).length,
+  [tickets]);
+
+  const subtitle = criticalCount > 0
+    ? `${criticalCount} critical · ${unassigned.length} unassigned · ${tickets.length} total`
+    : `Review and resolve escalated conversations. ${unassigned.length} unassigned.`;
+
   if (isLoading) {
     return (
       <div>
@@ -53,7 +65,7 @@ export default function EscalationsPage() {
 
   return (
     <div>
-      <PageHeader title="Manual Escalations" subtitle="Review and resolve escalated conversations." />
+      <PageHeader title="Manual Escalations" subtitle={subtitle} />
       <div className="px-6 py-4 space-y-4">
         <EscalationsQueueTabs
           value={queue}
