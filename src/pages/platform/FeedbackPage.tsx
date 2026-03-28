@@ -4,6 +4,7 @@ import { routeMetadata } from "@/lib/mock-api";
 import { FeedbackSummaryCards } from "@/components/feedback/FeedbackSummaryCards";
 import { FeedbackTable } from "@/components/feedback/FeedbackTable";
 import { KbScoreLeaderboard } from "@/components/feedback/KbScoreLeaderboard";
+import { KbHealthPanel } from "@/components/feedback/KbHealthPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -131,6 +132,7 @@ export default function FeedbackPage() {
           <TabsList>
             <TabsTrigger value="feedback">Feedback</TabsTrigger>
             <TabsTrigger value="suggestions">Admin Suggestions</TabsTrigger>
+            <TabsTrigger value="kb-health">KB Health</TabsTrigger>
           </TabsList>
 
           <TabsContent value="feedback" className="space-y-6 mt-4">
@@ -141,6 +143,10 @@ export default function FeedbackPage() {
 
           <TabsContent value="suggestions" className="mt-4">
             <AdminSuggestionsTab />
+          </TabsContent>
+
+          <TabsContent value="kb-health" className="mt-4">
+            <KbHealthPanel />
           </TabsContent>
         </Tabs>
       </div>
