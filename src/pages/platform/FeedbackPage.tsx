@@ -4,6 +4,7 @@ import { routeMetadata } from "@/lib/mock-api";
 import { FeedbackSummaryCards } from "@/components/feedback/FeedbackSummaryCards";
 import { FeedbackTable } from "@/components/feedback/FeedbackTable";
 import { KbScoreLeaderboard } from "@/components/feedback/KbScoreLeaderboard";
+import { KbHealthPanel } from "@/components/feedback/KbHealthPanel";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
