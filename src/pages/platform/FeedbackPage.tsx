@@ -131,6 +131,7 @@ export default function FeedbackPage() {
           <TabsList>
             <TabsTrigger value="feedback">Feedback</TabsTrigger>
             <TabsTrigger value="suggestions">Admin Suggestions</TabsTrigger>
+            <TabsTrigger value="kb-health">KB Health</TabsTrigger>
           </TabsList>
 
           <TabsContent value="feedback" className="space-y-6 mt-4">
