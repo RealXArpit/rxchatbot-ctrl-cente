@@ -34,7 +34,7 @@ export function KbHealthPanel() {
   const { data, isLoading, error, refetch } = useKbHealth();
 
   if (isLoading) return <LoadingSkeleton />;
-  if (error) return <ErrorPanel message={String(error)} onRetry={() => refetch()} />;
+  if (error) return <ErrorPanel onRetry={() => refetch()} />;
   if (!data) return null;
 
   const { distribution, needsReview, untested, topPerformers, signals } = data;
