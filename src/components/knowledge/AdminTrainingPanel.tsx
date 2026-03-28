@@ -100,8 +100,8 @@ export function AdminTrainingPanel({ item, onSyncUpdate }: Props) {
           <h4 className="text-xs font-medium text-destructive uppercase tracking-wide">Danger Zone</h4>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="sm" variant="destructive" className="w-full gap-1.5" disabled={deprecating}>
-                {deprecating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+              <Button size="sm" variant="destructive" className="w-full gap-1.5" disabled={deprecateMutation.isPending}>
+                {deprecateMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                 Deprecate Entry
               </Button>
             </AlertDialogTrigger>
@@ -109,12 +109,25 @@ export function AdminTrainingPanel({ item, onSyncUpdate }: Props) {
               <AlertDialogHeader>
                 <AlertDialogTitle>Deprecate KB Entry?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  This will mark <span className="font-mono">{item.id}</span> as deprecated in n8n. The bot will no longer use this entry for responses.
+                  This will mark <span className="font-mono">{item.id}</span> as deprecated. The bot will no longer use this entry for responses.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeprecate} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                <AlertDialogAction
+                  onClick={() => {
+                    deprecateMutation.mutate(item.id, {
+                      onSuccess: () => {
+                        toast.success("Entry deprecated successfully");
+                        if (onSyncUpdate) onSyncUpdate({ status: "Archived" } as any);
+                      },
+                      onError: (error) => {
+                        toast.error("Failed to deprecate: " + error.message);
+                      },
+                    });
+                  }}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
                   Deprecate
                 </AlertDialogAction>
               </AlertDialogFooter>
