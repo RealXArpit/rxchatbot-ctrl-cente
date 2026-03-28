@@ -61,7 +61,7 @@ export default function ChatLogsPage() {
   );
   const [page, setPage] = useState(1);
   const [columns, setColumns] = useState<ColumnKey[]>(loadColumns);
-  const pageSize = 25;
+  const [pageSize, setPageSize] = useState(25);
   const [interventionSession, setInterventionSession] = useState<LiveSession | null>(null);
 
   const { data: liveData, isLoading, error, refetch } = useChatLogs();
