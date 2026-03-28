@@ -143,6 +143,10 @@ export default function FeedbackPage() {
           <TabsContent value="suggestions" className="mt-4">
             <AdminSuggestionsTab />
           </TabsContent>
+
+          <TabsContent value="kb-health" className="mt-4">
+            <KbHealthPanel />
+          </TabsContent>
         </Tabs>
       </div>
     </RequireRole>
