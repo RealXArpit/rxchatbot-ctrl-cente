@@ -51,6 +51,84 @@ function mapLiveRow(row: any): Conversation {
   };
 }
 
+function KbPaginationBar({
+  page, totalPages, pageSize, totalItems,
+  onPageChange, onPageSizeChange,
+}: {
+  page: number; totalPages: number; pageSize: number; totalItems: number;
+  onPageChange: (p: number) => void; onPageSizeChange: (s: number) => void;
+}) {
+  if (totalItems === 0) return null;
+
+  const getPages = (): (number | "...")[] => {
+    if (totalPages <= 7) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    const pages: (number | "...")[] = [];
+    const add = (n: number) => { if (!pages.includes(n)) pages.push(n); };
+    add(1);
+    if (page > 3) pages.push("...");
+    if (page > 2) add(page - 1);
+    add(page);
+    if (page < totalPages - 1) add(page + 1);
+    if (page < totalPages - 2) pages.push("...");
+    add(totalPages);
+    return pages;
+  };
+
+  const from = (page - 1) * pageSize + 1;
+  const to = Math.min(page * pageSize, totalItems);
+
+  return (
+    <div className="flex items-center justify-between flex-wrap gap-2 py-1 pr-36">
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {from}–{to} of {totalItems}
+        </span>
+        <select
+          value={pageSize}
+          onChange={e => onPageSizeChange(Number(e.target.value))}
+          className="h-7 rounded-md border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        >
+          {[10, 25, 50, 100].map(s => (
+            <option key={s} value={s}>{s} / page</option>
+          ))}
+        </select>
+      </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => onPageChange(page - 1)}
+            disabled={page === 1}
+            className="h-7 w-7 rounded-md border border-input text-xs flex items-center justify-center disabled:opacity-40 hover:bg-muted transition-colors"
+          >‹</button>
+
+          {getPages().map((p, i) =>
+            p === "..." ? (
+              <span key={`ellipsis-${i}`} className="h-7 w-7 flex items-center justify-center text-xs text-muted-foreground">…</span>
+            ) : (
+              <button
+                key={p}
+                onClick={() => onPageChange(p as number)}
+                className={`h-7 w-7 rounded-md border text-xs flex items-center justify-center transition-colors ${
+                  p === page
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "border-input hover:bg-muted"
+                }`}
+              >{p}</button>
+            )
+          )}
+
+          <button
+            onClick={() => onPageChange(page + 1)}
+            disabled={page === totalPages}
+            className="h-7 w-7 rounded-md border border-input text-xs flex items-center justify-center disabled:opacity-40 hover:bg-muted transition-colors"
+          >›</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ChatLogsPage() {
   const { env } = useTenant();
   const [searchParams] = useSearchParams();
@@ -61,7 +139,7 @@ export default function ChatLogsPage() {
   );
   const [page, setPage] = useState(1);
   const [columns, setColumns] = useState<ColumnKey[]>(loadColumns);
-  const pageSize = 25;
+  const [pageSize, setPageSize] = useState(25);
   const [interventionSession, setInterventionSession] = useState<LiveSession | null>(null);
 
   const { data: liveData, isLoading, error, refetch } = useChatLogs();
@@ -128,6 +206,14 @@ export default function ChatLogsPage() {
             {!isLoading && (
               <>
                 <LogsFiltersBar filters={filters} onChange={handleFilterChange} />
+                <KbPaginationBar
+                  page={page}
+                  totalPages={Math.max(1, Math.ceil(result.total / pageSize))}
+                  pageSize={pageSize}
+                  totalItems={result.total}
+                  onPageChange={setPage}
+                  onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
+                />
                 <LogsTable
                   items={result.items}
                   columns={columns}
@@ -135,6 +221,14 @@ export default function ChatLogsPage() {
                   pageSize={result.pageSize}
                   total={result.total}
                   onPageChange={setPage}
+                />
+                <KbPaginationBar
+                  page={page}
+                  totalPages={Math.max(1, Math.ceil(result.total / pageSize))}
+                  pageSize={pageSize}
+                  totalItems={result.total}
+                  onPageChange={setPage}
+                  onPageSizeChange={(s) => { setPageSize(s); setPage(1); }}
                 />
               </>
             )}
