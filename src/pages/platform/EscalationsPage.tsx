@@ -8,6 +8,7 @@ import { EscalationsTable } from "@/components/escalations/EscalationsTable";
 import { LoadingSkeleton } from "@/components/platform/LoadingSkeleton";
 import { ErrorPanel } from "@/components/platform/ErrorPanel";
 import { useEscalations } from "@/hooks/useEscalations";
+import { getUrgency } from "@/lib/escalation-urgency";
 import type { EscalationTicket } from "@/lib/mock-escalations";
 
 export default function EscalationsPage() {
