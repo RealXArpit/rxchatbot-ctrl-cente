@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -130,6 +130,7 @@ export default function TrainPage() {
 
   const [tab, setTab] = useState("kb");
   const [filters, setFilters] = useState<KbFilterState>({ q: "", status: "", category: "" });
+  const [sortBy, setSortBy] = useState<"created" | "updated">("created");
 
   const [searchParams, setSearchParams] = useSearchParams();
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
@@ -163,15 +164,27 @@ export default function TrainPage() {
       return getKbItems(env ?? "dev", f);
     }
 
-    return source.filter((item) => {
+    source = source.filter((item) => {
       if (filters.q && !item.question.toLowerCase().includes(filters.q.toLowerCase()) && !item.answer.toLowerCase().includes(filters.q.toLowerCase())) return false;
       if (filters.status && (filters.status as string) !== "all-statuses" && item.status !== filters.status) return false;
       if (filters.category && item.category !== filters.category) return false;
       return true;
     });
-  }, [env, filters, liveData]);
 
-  useEffect(() => { setPage(1); }, [filters]);
+    if (sortBy === "updated") {
+      source.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    }
+
+    return source;
+  }, [env, filters, liveData, sortBy]);
+
+  const prevQRef = useRef(filters.q);
+  useEffect(() => {
+    if (filters.q !== prevQRef.current) {
+      setPage(1);
+      prevQRef.current = filters.q;
+    }
+  }, [filters.q]);
 
   const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
   const pagedItems = items.slice((page - 1) * pageSize, page * pageSize);
@@ -208,20 +221,30 @@ export default function TrainPage() {
             </TabsList>
             <div className="flex items-center gap-2">
               {tab === "kb" && (
-                <div className="flex rounded-md border border-border overflow-hidden">
-                  <button
-                    onClick={() => handleKbViewChange("list")}
-                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs transition-colors ${kbView === "list" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
+                <>
+                  <div className="flex rounded-md border border-border overflow-hidden">
+                    <button
+                      onClick={() => handleKbViewChange("list")}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 text-xs transition-colors ${kbView === "list" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
+                    >
+                      <LayoutList className="h-3.5 w-3.5" /> List
+                    </button>
+                    <button
+                      onClick={() => handleKbViewChange("cards")}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 text-xs transition-colors ${kbView === "cards" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5" /> Cards
+                    </button>
+                  </div>
+                  <select
+                    value={sortBy}
+                    onChange={e => setSortBy(e.target.value as "created" | "updated")}
+                    className="h-7 rounded-md border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   >
-                    <LayoutList className="h-3.5 w-3.5" /> List
-                  </button>
-                  <button
-                    onClick={() => handleKbViewChange("cards")}
-                    className={`flex items-center gap-1 px-2.5 py-1.5 text-xs transition-colors ${kbView === "cards" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:text-foreground"}`}
-                  >
-                    <LayoutGrid className="h-3.5 w-3.5" /> Cards
-                  </button>
-                </div>
+                    <option value="created">Newest first</option>
+                    <option value="updated">Recently edited</option>
+                  </select>
+                </>
               )}
               {tab === "kb" && canCreate && (
                 <Button size="sm" className="gap-1.5 text-xs" onClick={() => navigate(`/realx/${env}/train/kb/new`)}>
