@@ -5,13 +5,15 @@ import type { Message } from '@/lib/mock-conversations';
 
 export function useSessionTranscript(sessionId: string | null | undefined) {
   const queryClient = useQueryClient();
+  const isValidSessionId =
+    typeof sessionId === 'string' && sessionId.length > 10 && sessionId !== 'error-session';
 
   const query = useQuery({
     queryKey: ['session_transcript', sessionId],
-    enabled: typeof sessionId === 'string' && sessionId.length > 0,
+    enabled: isValidSessionId,
     staleTime: 0,
     queryFn: async () => {
-      if (!sessionId) return [];
+      if (!isValidSessionId || !sessionId) return [];
       const { data, error } = await supabase
         .from('sessions')
         .select('id, session_id, role, message, turn, timestamp')
@@ -38,13 +40,15 @@ export function useSessionTranscript(sessionId: string | null | undefined) {
 
   // Supabase Realtime subscription — refetch whenever a new message
   // is inserted into the sessions table for this session_id.
-  // This replaces the previous behaviour where re-renders triggered
-  // accidental refetches.
   useEffect(() => {
-    if (!sessionId) return;
+    if (!isValidSessionId || !sessionId) return;
+
+    // Channel names must be unique per hook instance; reusing the same
+    // name across multiple mounts causes "cannot add callbacks after subscribe".
+    const channelName = `session_transcript_${sessionId}_${Math.random().toString(36).slice(2, 9)}`;
 
     const channel = supabase
-      .channel(`session_transcript_${sessionId}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
@@ -64,7 +68,7 @@ export function useSessionTranscript(sessionId: string | null | undefined) {
     return () => {
       channel.unsubscribe();
     };
-  }, [sessionId, queryClient]);
+  }, [sessionId, isValidSessionId, queryClient]);
 
   return query;
 }
