@@ -54,7 +54,6 @@ export function useSessionTranscript(sessionId: string | null | undefined) {
           filter: `session_id=eq.${sessionId}`,
         },
         () => {
-          // Invalidate the cache so useQuery refetches immediately
           queryClient.invalidateQueries({
             queryKey: ['session_transcript', sessionId],
           });
@@ -63,7 +62,7 @@ export function useSessionTranscript(sessionId: string | null | undefined) {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
     };
   }, [sessionId, queryClient]);
 
