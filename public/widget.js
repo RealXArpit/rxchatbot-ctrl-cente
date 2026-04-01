@@ -3,8 +3,8 @@
 
   // ── Configuration ────────────────────────────────────────────────
   var config      = window.RealXChatConfig || {};
-  var WEBHOOK_URL = 'https://n8n-production-8279e.up.railway.app/webhook/realx-ai';
-  var API_KEY     = 'rx-chat-sk-2026-PROD-CgatBhtr'; // replace with your VITE_API_KEY_PROD
+  var WEBHOOK_URL = 'https://n8n-production-5c06.up.railway.app/webhook/realx-ai';
+  var API_KEY     = 'rx-chat-sk-2026-M9aG'; // replace with your VITE_API_KEY_PROD
   var CHANNEL     = 'WEBSITE';
 
   // Anonymous session persistence — survives page navigation within
