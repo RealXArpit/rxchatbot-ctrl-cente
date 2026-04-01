@@ -104,11 +104,11 @@ export default function ConversationDetailPage() {
               Could not load transcript from database.
             </p>
           )}
-          {!transcriptLoading && !transcriptError && (() => {
-            const messages = (liveMessages && liveMessages.length > 0)
-              ? liveMessages
-              : (detail?.messages ?? []);
-            if (messages.length === 0) {
+{!transcriptLoading && !transcriptError && (() => {
+            // Do not render TranscriptWithSelection until we have a valid
+            // session ID — passing empty string or fallback values causes
+            // a Supabase Realtime subscription error
+            if (!resolvedSessionId || resolvedSessionId.length < 10) {
               return (
                 <p className="text-sm text-muted-foreground">
                   No transcript recorded for this session yet.
@@ -117,7 +117,7 @@ export default function ConversationDetailPage() {
             }
             return (
               <TranscriptWithSelection
-                sessionId={resolvedSessionId ?? ""}
+                sessionId={resolvedSessionId}
                 selectedMessages={selectedMessages}
                 onSelectionChange={setSelectedMessages}
               />
