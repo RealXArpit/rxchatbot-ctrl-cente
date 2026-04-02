@@ -3,8 +3,8 @@
 
   // ── Configuration ────────────────────────────────────────────────────────
   var config      = window.RealXChatConfig || {};
-  var WEBHOOK_URL = 'https://n8n-production-8279e.up.railway.app/webhook/realx-ai';
-  var API_KEY     = 'rx-chat-sk-2026-PROD-CgatBhtr'; // replace with your VITE_API_KEY_PROD
+  var WEBHOOK_URL = 'https://n8n-production-8279e.up.railway.app/webhook/realx-ai'; // REPLACE with prod URL
+  var API_KEY     = 'rx-chat-sk-2026-PROD-CgatBhtr'; // REPLACE with VITE_API_KEY_PROD
   var CHANNEL     = 'WEBSITE';
   var TYPEWRITER_SPEED = 60; // characters per second — increase for faster, decrease for slower
 
