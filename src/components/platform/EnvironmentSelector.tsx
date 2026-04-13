@@ -13,7 +13,7 @@ export function EnvironmentSelector() {
 
   const switchTo = (target: "dev" | "prod") => {
     if (target !== env) {
-      navigate(`/realx/${target}/${currentModule}`);
+      navigate(`/realx/${target}/${rest}`);
     }
   };
 
