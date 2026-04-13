@@ -6,14 +6,14 @@ export function EnvironmentSelector() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Extract module from the path: /realx/:env/:module
+  // Extract everything after /realx/:env/
   const parts = location.pathname.split("/");
-  const moduleIndex = 3; // ["", "realx", env, module, ...]
-  const currentModule = parts[moduleIndex] || "overview";
+  // parts = ["", "realx", env, module, sub1, sub2, ...]
+  const rest = parts.slice(3).join("/") || "overview";
 
   const switchTo = (target: "dev" | "prod") => {
     if (target !== env) {
-      navigate(`/realx/${target}/${currentModule}`);
+      navigate(`/realx/${target}/${rest}`);
     }
   };
 
